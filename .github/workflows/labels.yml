@@ -1,18 +1,13 @@
 name: labels
-on:
-  push:
-    branches:
-      - main
+on: issues
 jobs:
   labels:
     name: DefaultLabelsActions
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Configure issue labels
-        uses: lannonbr/issue-label-manager-action@4.0.0
+      - uses: actions/checkout@v3
+      - uses: lannonbr/issue-label-manager-action@3.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           delete: true
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
