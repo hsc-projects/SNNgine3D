@@ -50,9 +50,9 @@ deps/deps.jl
 !/.readthedocs.yml
 !/.dockerignore
 !/.editorconfig
-!/.pre-commit-config.yaml
+!/archive/.pre-commit-config.yaml
 !.npmignore
-!/.scrutinizer.yml
+!/archive/.scrutinizer.yml
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,c,c++,cuda,pycharm,visualstudiocode,jupyternotebooks
