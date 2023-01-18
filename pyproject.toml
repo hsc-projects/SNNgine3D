@@ -65,11 +65,10 @@ classifiers = [
 # if you detect that the user is running a newer version than they were using before.
 # If you don't need this, you can remove these entries.
 # (You might also be able to package this pyproject.toml file and read metadata from it.)
-#include = [
+include = [
 #    "README.md",
-#    "LICENSE.txt",
-#    "CHANGELOG.md"
-#]
+#    "LICENSE.txt"
+]
 
 [tool.poetry.urls]
 # 'CI', 'Issues', and 'Download' seem to have special meanings
@@ -336,11 +335,11 @@ source = ["snn_engine3d"]
 show_missing = true
 
 [tool.black]
-line-length = 100
+line-length = 120
 target-version = ["py310"]
 
 [tool.isort]
-line_length = 100
+line_length = 120
 
 [mypy]
 check_untyped_defs = true
@@ -355,9 +354,10 @@ strict_optional = true
 # https://github.com/PyCQA/pydocstyle/issues/447
 
 [tool.bandit]
+exclude_dirs = ["tests/.pre-commit-config.yaml", "tests/tox.ini", "tests/.tox"]
 
 [tool.pycodestyle]
-max-line-length = 100
+max-line-length = 120
 statistics = true
 
 [tool.pydocstyle]

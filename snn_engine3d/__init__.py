@@ -47,9 +47,8 @@ except PackageNotFoundError:  # pragma: no cover
 
 
 class Snnengine3DAssets:
-    """
-    Utilities and resources for ${Project}.
-    """
+    """Utilities and resources for ${Project}."""
+
     @classmethod
     def path(cls, *nodes: Sequence[str]) -> Path:
         """

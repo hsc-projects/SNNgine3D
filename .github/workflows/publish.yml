@@ -21,7 +21,7 @@ jobs:
           pip install poetry tox
       - name: Test with tox
         run: |
-          tox -v
+          tox -v -c tests/ --root .
       - name: Build sdists and wheels with Poetry
         run: |
           poetry build

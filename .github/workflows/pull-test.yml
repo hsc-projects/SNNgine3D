@@ -26,4 +26,4 @@ jobs:
           pip install tox poetry
       - name: Test with tox
         run: |
-          tox -v
+          tox -v -c tests/ --root .

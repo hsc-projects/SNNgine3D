@@ -16,8 +16,8 @@ or implied. See the License for the specific language governing
 permissions and limitations under the License.
 
 """
-import contextlib
-import io
+# import contextlib
+# import io
 
 import pytest
 
@@ -30,7 +30,7 @@ class TestCli:
     def test_cli(self):
         with TestResources.capture() as capture:
             response = cli.info()
-        assert f"Processed 100 things." in capture.stdout
+        assert "Processed 100 things." in capture.stdout
         assert capture.stderr.strip() == ""
 
 

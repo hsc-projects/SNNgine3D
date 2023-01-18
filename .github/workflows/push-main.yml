@@ -32,10 +32,10 @@ jobs:
           pip install poetry tox
       - name: Test with tox
         run: |
-          tox -v
+          tox -v -c tests/ --root .
       - name: Build the Docker image
         run: |
-          docker build .
+          docker build -f docker/Dockerfile .
       - name: Update coveralls
         run: |
           pip install 'coveralls>=3,<4'
