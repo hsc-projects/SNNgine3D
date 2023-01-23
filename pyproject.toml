@@ -90,7 +90,7 @@ snn_engine3d = "snn_engine3d.cli:cli"
 [tool.poetry.dependencies]
 # These are dependencies that are included in the main package
 python                   = "^3.10"
-typer                    = "^0.3"
+typer                    = "^0.7"
 
 [tool.poetry.dev-dependencies]
 # Remove build dependencies you don't want (like xdoctest, perhaps)
