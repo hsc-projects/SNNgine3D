@@ -90,7 +90,9 @@ snn_engine3d = "snn_engine3d.cli:cli"
 [tool.poetry.dependencies]
 # These are dependencies that are included in the main package
 python                   = "^3.10"
-typer                    = "^0.3"
+pyqt6                    = "^6.4.0"
+typer                    = "^0.7"
+vispy                    = "^0.12.1"
 
 [tool.poetry.dev-dependencies]
 # Remove build dependencies you don't want (like xdoctest, perhaps)
@@ -104,7 +106,7 @@ typer                    = "^0.3"
 # Note: We don't use flake8-bandit because it appears to be unmaintained
 bandit                   = "^1.7"
 coverage                 = {extras = ["toml"], version = "^6.0"}
-flake8                   = "^3.9"
+flake8                   = "^6.0"
 flake8-bugbear           = ">=21"
 flake8-docstrings        = "^1.5"
 pre-commit               = "^2.15"
@@ -113,7 +115,7 @@ pytest                   = "^7.2"
 pytest-cov               = "^4.0"
 sphinx                   = "^5.3"
 sphinx-autoapi           = "^2.0"
-sphinx-copybutton        = "^0.4"
+sphinx-copybutton        = "^0.5"
 sphinx-rtd-theme         = "^1.0"
 tomlkit                  = "^0.11"
 
@@ -121,7 +123,7 @@ tomlkit                  = "^0.11"
 # ... but they're generally optional, and the build won't fail if you remove them
 # For example, `mypy` is called in `tox.ini`, but if it's removed then the line
 # will fail without causing the build to fail.
-mypy                     = "^0.910"
+mypy                     = "^0.991"
 
 # These are useful but are not used directly in the default build pipeline
 # that Tyrannosaurus set up for your project
