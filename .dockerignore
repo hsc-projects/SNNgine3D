@@ -3,6 +3,8 @@
 # We're excluding docs and tests
 tests
 docs
+docker/docker_images_diagram.puml
+
 .github
 .circleci
 .travis.yml

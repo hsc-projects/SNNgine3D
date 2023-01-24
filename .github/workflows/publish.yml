@@ -28,7 +28,7 @@ jobs:
           poetry install
       - name: Build the Docker image
         run: |
-          docker build .
+          docker build -f docker/Dockerfile-SNNgine3D-nomachine-base .
       - name: Attach artifacts to the GitHub release
         uses: skx/github-action-publish-binaries@master
         with:

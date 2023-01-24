@@ -1,0 +1,91 @@
+@startuml
+allowmixing
+
+
+class "nvidia/cuda:11.6.2-devel-ubuntu20.04" as nvidia <<(I, #0db7ed)>> {
+}
+hide nvidia members
+
+class "SNNgine3D-nomachine-base" as snn3D_base <<(I, #0db7ed)>> {
+    --installs--
+    git
+    NoMachine
+    ...
+    --commands--
+    --gpus all
+    --init
+}
+
+class "SNNgine3D-nomachine" as snn3D_nomachine <<(I, #0db7ed)>> {
+    ..python..
+    Mamba
+    Jupyter Notebook
+    JupyterLab
+    ..
+    PyCUDA
+    PyTorch
+    SNNgine3D
+    ...
+    --commands--
+    --gpus all
+    --init
+    --exposed ports--
+    22
+    4000
+}
+
+
+class "SNNgine3D-nomachine-jupyter-server" as snn3D_jup_nomachine <<(I, #0db7ed)>> {
+    --exposed ports--
+    22
+    4000
+    8888
+}
+
+'note left of snn3D_jup_nomachine
+'  see also: https://github.com/iot-salzburg/gpu-jupyter
+'end note
+
+nvidia <|-- snn3D_base
+snn3D_base <|-- snn3D_nomachine
+snn3D_nomachine <|-- snn3D_jup_nomachine
+
+'snn3D_base <|-- snn3D_base
+'snn3D_base <|-- base_jupyter
+'snn3D_base <|-- snn3D_nomachine
+'snn3D_base *-- install_snn3D
+'base_jupyter <|-- snn3D_jup_nomachine
+'snn3D_jup_nomachine *-- install_snn3D
+'class "snngine3D" as install_snn3D <<(P, #FFD43B)>> {
+'..requires..
+'Vispy
+'...
+'}
+'hide install_snn3D methods
+'class "cuda-base-jupyter" as base_jupyter <<(I, #0db7ed)>> {
+'    --installs--
+'    mamba
+'    conda
+'    Jupyter
+'    ...
+'    --exposed ports--
+'    8888
+'}
+'
+'note left of base_jupyter
+'  see also: https://github.com/iot-salzburg/gpu-jupyter
+'end note
+
+'class "snngine3D-base" as snn3D_base <<(I, #0db7ed)>> {
+'}
+'hide snn3D_base members
+
+'class "snngine3D-nomachine" as snn3D_nomachine <<(I, #0db7ed)>> {
+'    --installs--
+'    mamba
+'    conda
+'    Jupyter
+'    --exposed ports--
+'    4000
+'}
+@enduml
