@@ -21,7 +21,7 @@ build-backend = "poetry.masonry.api"
 
 [tool.poetry]
 
-name = "snn_engine3d"
+name = "snngine3d"
 # This is the version of your project. Keep it up-to-date and follow semantic versioning.
 # It's used in the PyPi, wheels, Docker, and GitHub packages.
 # Also make sure to use exactly this version when creating a GitHub release,
@@ -31,16 +31,16 @@ name = "snn_engine3d"
 # not all tools are compatible with it, so avoid it if you can.
 version = "0.0.0"
 
-description = "A simulator for spatially extended spiking neural networks"
+description = "A simulator and visualizer for spatially extended spiking neural networks"
 keywords = [""]
 authors = ["hsc-projects"]
 maintainers = ["hsc-projects"]
 # This must be an identifier listed in https://spdx.org/licenses/
 license = "Apache-2.0"
 readme = "README.md"
-homepage = "https://github.com/hsc-projects/snn_engine3d"
-repository = "https://github.com/hsc-projects/snn_engine3d"
-#documentation = "https://snn_engine3d.readthedocs.io"
+homepage = "https://github.com/hsc-projects/snngine3d"
+repository = "https://github.com/hsc-projects/snngine3d"
+#documentation = "https://snngine3d.readthedocs.io"
 
 # Add topics here
 
@@ -73,9 +73,9 @@ include = [
 [tool.poetry.urls]
 # 'CI', 'Issues', and 'Download' seem to have special meanings
 # These all get icons on PyPi
-CI = "https://github.com/hsc-projects/snn_engine3d/actions"
-Issues = "https://github.com/hsc-projects/snn_engine3d/issues"
-Download = "https://pypi.org/project/snn_engine3d/"
+CI = "https://github.com/hsc-projects/snngine3d/actions"
+Issues = "https://github.com/hsc-projects/snngine3d/issues"
+Download = "https://pypi.org/project/snngine3d/"
 
 
 #########################################################################################
@@ -84,13 +84,15 @@ Download = "https://pypi.org/project/snn_engine3d/"
 
 [tool.poetry.scripts]
 # Set the name of the Python module followed by a colon, followed by the name of the function
-snn_engine3d = "snn_engine3d.cli:cli"
+snngine3d = "snngine3d.cli:cli"
 
 
 [tool.poetry.dependencies]
 # These are dependencies that are included in the main package
+numba                    = "^0.56"
 python                   = "^3.10"
-pyqt6                    = "^6.4.0"
+pyopengl                 = "^3.1"
+pyqt6                    = "^6.4"
 typer                    = "^0.7"
 vispy                    = "^0.12.1"
 
@@ -236,7 +238,7 @@ docstringstyle     = "'google'"
 # These affect flake8 commands as directed in tox.ini
 # 'all' is copied to tox.ini [flake8.ignore]; these are always ignored
 # Any other keys refer to the directory that flake8 is called on
-# Ex, `snn_engine3d = "'D100'"` adds D100 in `poetry run flake8 snn_engine3d --ignore=D100`
+# Ex, `snngine3d = "'D100'"` adds D100 in `poetry run flake8 snngine3d --ignore=D100`
 # (Note 1: flake8's --ignore overrides the [flake8.ignore], so Tyrannosaurus appends the "all" values.)
 # (Note 2: Keys referring to directory names that tox.ini doesn't call flake8 on are ignored.)
 # (Note 3: [tool.pycodestyle] and [tool.pydocstyle] don't need these values because flake8 handles it.)
@@ -245,7 +247,7 @@ docstringstyle     = "'google'"
 # 212 and 213 contradict; 203 and 204 contradict; D302 is not relevant in Py3;
 # D107 isn't needed sometimes; and the rest just seem too picky
 all    = "'W503,E203,E225,E301,E302,E501,D107,D200,D205,D400,D403,D409,D410,D411,D212,W391,W293'"
-#snn_engine3d  = ""
+#snngine3d  = ""
 #doc  = ""
 test = "'D100,D101,D102,D103,D104,S101,W503,E203,E225,E301,E302,E501,D107,D200,D205,D400,D403,D409,D410,D411,D212,W391,W293'"
 
@@ -254,7 +256,7 @@ test = "'D100,D101,D102,D103,D104,S101,W503,E203,E225,E301,E302,E501,D107,D200,D
 # These specify where to put certain files
 # If they're left blank, the defaults will be used
 # The syntax is the same as for tool.tyrannosaurus.sources
-#recipe             = "'recipes/snn_engine3d/meta.yaml'"
+#recipe             = "'recipes/snngine3d/meta.yaml'"
 #environment        = "'environment.yml'"
 
 [tool.tyrannosaurus.targets]
@@ -328,10 +330,10 @@ filename = "NEWS.md"
 # [tool.towncrier] (if you want to set up towncrier)
 
 [tool.coverage.paths]
-source = ["snn_engine3d"]
+source = ["snngine3d"]
 
 [tool.coverage.run]
-source = ["snn_engine3d"]
+source = ["snngine3d"]
 
 [tool.coverage.report]
 show_missing = true

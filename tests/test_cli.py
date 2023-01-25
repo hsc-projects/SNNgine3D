@@ -21,7 +21,7 @@ permissions and limitations under the License.
 
 import pytest
 
-from snn_engine3d import cli
+from snngine3d import cli
 from . import TestResources
 
 

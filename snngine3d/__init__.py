@@ -1,5 +1,5 @@
 """
-Metadata for this snn_engine3D.
+Metadata for this SNNgine3D.
 
 Copyright 2023 hsc-projects
 

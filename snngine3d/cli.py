@@ -1,5 +1,5 @@
 """
-Command-line interface for snn_engine3D.
+Command-line interface for SNNgine3D.
 
 Copyright 2023 hsc-projects
 
@@ -24,7 +24,7 @@ import time
 
 import typer
 
-from snn_engine3d import __title__, __version__, __copyright__, metadata
+from snngine3d import __title__, __version__, __copyright__, metadata
 
 
 logger = logging.getLogger(__package__)
@@ -34,7 +34,7 @@ cli = typer.Typer()
 @cli.command()
 def info(n_seconds: float = 0.01, verbose: bool = False) -> None:
     """
-    Get info about snn_engine3D.
+    Get info about SNNgine3D.
 
     Args:
         n_seconds: Number of seconds to wait between processing.
