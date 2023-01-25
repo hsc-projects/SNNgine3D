@@ -1,0 +1,89 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# GitHub recommends pinning actions to a commit SHA.
+# To get a newer version, you will need to update the SHA.
+# You can also reference a tag or branch, but the action may change without warning.
+
+name: Build and push snngine3d-nomachine
+
+concurrency:
+  group: ${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+
+on:
+  workflow_dispatch:
+    branches:
+      - main
+      - dev
+      - 'features/**'
+  workflow_run:
+    workflows: [ Build and push snngine3d-nomachine-base ]
+    types: [ completed ]
+#    inputs:
+#      name:
+#        description: 'Image tag'
+#        required: true
+#        default: 'manual'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+#  on-success:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    if: (${{ github.event.workflow_run.conclusion == 'success' }}) || (github.event_name == 'workflow_dispatch')
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to the GitHub Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            hscprojects/snngine3d-nomachine
+            ghcr.io/hsc-projects/snngine3d-nomachine
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=ref,event=branch
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: "./docker/Dockerfile-SNNgine3D-nomachine"
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            FROM_TAG=${{ github.ref_name }}
+#           FROM_TAG=... TODO: pass the intended tag

@@ -1,6 +1,6 @@
 # Build, test, and publish to releases, packages, PyPi, etc.
 # Runs when creating a GitHub release
-name: publish
+name: Publish
 on:
   release:
     types: [published]
@@ -28,7 +28,7 @@ jobs:
           poetry install
       - name: Build the Docker image
         run: |
-          docker build .
+          docker build -f docker/Dockerfile-SNNgine3D-nomachine .
       - name: Attach artifacts to the GitHub release
         uses: skx/github-action-publish-binaries@master
         with:

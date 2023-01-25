@@ -1,7 +1,11 @@
 # Various static code analysis and checks
 # Runs on commit or pull (to any branch)
 # and on a schedule (weekly)
-name: check
+name: Static code analysis and checks
+
+concurrency:
+  group: ${{ github.head_ref || github.ref_name }}
+
 on:
   push:
     branches:
@@ -9,6 +13,8 @@ on:
   pull_request:
   schedule:
     - cron: 0 7 * * 6
+
+
 jobs:
   markdown-link-check:
     name: Check Markdown links

@@ -1,6 +1,10 @@
 # Build, test, and run static analyses, and send reports to external services
 # Runs only on pushing to main
-name: maintest
+name: Test main branch
+
+concurrency:
+  group: ${{ github.head_ref || github.ref_name }}
+
 on:
   push:
     branches:
@@ -35,7 +39,7 @@ jobs:
           tox -v -c tests/ --root .
       - name: Build the Docker image
         run: |
-          docker build -f docker/Dockerfile .
+          docker build -f docker/Dockerfile-SNNgine3D-nomachine .
 #      - name: Update coveralls
 #        run: |
 #          pip install 'coveralls>=3,<4'
