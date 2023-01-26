@@ -35,4 +35,5 @@ For example:
 
 ## Docker
   
-  docker run -d -p 4000:4000 --name nomachine0 --gpus all --cap-add=SYS_PTRACE snngine3d-nomachine
+  docker run -d -p 4001:4000 --name nomachine0 --gpus all --cap-add=SYS_PTRACE hscprojects/snngine3d-nomachine:main
+  (user & passw: snn)

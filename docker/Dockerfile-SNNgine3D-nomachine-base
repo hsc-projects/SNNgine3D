@@ -131,4 +131,4 @@ RUN chmod 1777 /tmp && chmod 1777 /var/tmp && \
 EXPOSE 22 4000
 ENTRYPOINT ["nxserver"]
 
-# docker run -d -p 4000:4000 --name nomachine-base0 --cap-add=SYS_PTRACE snngine3d-nomachine-base
+# docker run -d -p 4000:4000 --name nomachine-base0 --cap-add=SYS_PTRACE hscprojects/snngine3d-nomachine-base:main

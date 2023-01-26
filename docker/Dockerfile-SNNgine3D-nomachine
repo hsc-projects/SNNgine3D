@@ -124,4 +124,4 @@ RUN wget -c "https://download-cf.jetbrains.com/python/pycharm-community-${PYCHAR
     ln -s "/opt/pycharm-community-${PYCHARM_COM_VERSION}/bin/pycharm.sh" /usr/bin/pycharm
 
 
-# docker run -d -p 4001:4000 --name nomachine0 --gpus all --cap-add=SYS_PTRACE snngine3d-nomachine
+# docker run -d -p 4001:4000 --name nomachine0 --gpus all --cap-add=SYS_PTRACE hscprojects/snngine3d-nomachine:main
