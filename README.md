@@ -16,8 +16,8 @@ Licensed under the terms of the [Apache License 2.0](https://spdx.org/licenses/A
 ### Pre-requisites
 
 * [PyTorch](https://pytorch.org/)
-* [Nvidia CUDA](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#), preferably >=11.6
-* "OpenGL-enabled"-[PyCUDA](https://wiki.tiker.net/PyCuda/Installation/Linux/). 
+* [Nvidia CUDA](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#) ~=11.6
+* "OpenGL-enabled"-[PyCUDA](https://wiki.tiker.net/PyCuda/Installation/Linux/) 
  
 For example:  
 
@@ -34,6 +34,7 @@ For example:
     pip install . 
 
 ## Docker
+
   
-  docker run -d -p 4000:4000 --name nomachine0 --gpus all --cap-add=SYS_PTRACE hscprojects/snngine3d-nomachine:main
-  (user & passw: snn)
+    docker run -d -p 4000:4000 --name nomachine0 --gpus all --cap-add=SYS_PTRACE hscprojects/snngine3d-nomachine:main
+    (NoMachine user & password: snn)

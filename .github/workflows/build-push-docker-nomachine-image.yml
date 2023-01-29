@@ -87,5 +87,5 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            FROM_TAG=${{ github.ref_name }}
+            FROM_TAG=${{ github.ref_name }}////-
 #           FROM_TAG=... TODO: pass the intended tag
