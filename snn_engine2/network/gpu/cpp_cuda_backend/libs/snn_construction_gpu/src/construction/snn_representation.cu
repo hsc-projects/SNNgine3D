@@ -3,7 +3,7 @@
 void __global__ fill_N_flags_group_id_and_G_neuron_count_per_type_(
 	const int N,
     const int G,
-	const float* N_pos, 
+	const float* N_pos,
 	float N_pos_shape_x, float N_pos_shape_y, float N_pos_shape_z,
     const int N_pos_n_cols,
 	int* N_flags,
@@ -19,28 +19,28 @@ void __global__ fill_N_flags_group_id_and_G_neuron_count_per_type_(
 )
 {
 	const int n = blockIdx.x * blockDim.x + threadIdx.x;  // NOLINT(bugprone-narrowing-conversions)
-	
+
 	if (n < N)
 	{
-		const int x = __float2int_rd(((N_pos[n * N_pos_n_cols] / N_pos_shape_x) * G_shape_x));  
+		const int x = __float2int_rd(((N_pos[n * N_pos_n_cols] / N_pos_shape_x) * G_shape_x));
 		const int y = __float2int_rd(((N_pos[n * N_pos_n_cols + 1] / N_pos_shape_y) * G_shape_y));
 		const int z = __float2int_rd(((N_pos[n * N_pos_n_cols + 2] / N_pos_shape_z) * G_shape_z));
 
 		const int group = x + G_shape_x * y + G_shape_x * G_shape_y * z;
 
-		// assign neuron to location-based group 
-		printf("\n (%d) []")
+		// assign neuron to location-based group
+		//printf("\n (%d) []")
 		N_flags[n + N_flags_row_group * N] = group;
-		
+
 		// count group: row <> neuron type (1 or 2), column <> group id
-		atomicAdd(&G_neuron_counts[group + G * (N_flags[n + N_flags_row_type * N] - 1)], 1);	
+		atomicAdd(&G_neuron_counts[group + G * (N_flags[n + N_flags_row_type * N] - 1)], 1);
 	}
 }
 
 
 void fill_N_flags_group_id_and_G_neuron_count_per_type(
-    const int N, 
-    const int G, 
+    const int N,
+    const int G,
     const float* N_pos,
 	const int N_pos_shape_x, const int N_pos_shape_y, const int N_pos_shape_z,
     int* N_flags,
@@ -50,7 +50,7 @@ void fill_N_flags_group_id_and_G_neuron_count_per_type(
 	const int N_flags_row_type,
 	const int N_flags_row_group
 )
-{	
+{
 	// Assign location-based group ids to neurons w.r.t. their positions.
 
 	// N: 				number of neurons
@@ -60,28 +60,28 @@ void fill_N_flags_group_id_and_G_neuron_count_per_type(
 	// N_pos_n_cols: 	number of columns of N_pos
 
 	// G_shape_*:		number of location-based groups along the *-axis
-	// 
+	//
 	//
 	// Example:
-	// 
+	//
 	//	G = 8
 	//	N_pos_n_cols = 3
-	//	N_pos = [[0,0,0], 
+	//	N_pos = [[0,0,0],
 	//			 [1,1,0]]
-	//		
+	//
 	//	N_flags_row_group = 2
 	//
 	// 	N_flags = 	[[...], [0,1],   [0,0]]	  -> 	N_flags = 	[[...], [0,1], [0,2]]
-	//			        				 
-	//	
+	//
+	//
 	//	G_neuron_counts = 	[[0,0,0],	-> 	[[1,0,0],
 	//						 [0,0,0]]		 [0,0,1]]
-	//	
+	//
 
 
 	cudaDeviceSynchronize();
-	LaunchParameters launch(N, (void *)fill_N_flags_group_id_and_G_neuron_count_per_type_); 
-	
+	LaunchParameters launch(N, (void *)fill_N_flags_group_id_and_G_neuron_count_per_type_);
+
 	int min_G_shape = std::min(std::min(G_shape_x, G_shape_y), G_shape_z);
 
 	fill_N_flags_group_id_and_G_neuron_count_per_type_ KERNEL_ARGS2(launch.grid3, launch.block3) (
@@ -98,7 +98,7 @@ void fill_N_flags_group_id_and_G_neuron_count_per_type(
 		static_cast<float>(min_G_shape),
 		G_neuron_counts
 	);
-	
+
 	cudaDeviceSynchronize();
 	printf("\n");
 }
@@ -114,7 +114,7 @@ __device__ float sigmoidal_connection_probability(
 {
 	const float inv_max_delay = (1.f / max_delay);
 	const float normalized_delay = delay * inv_max_delay;
-	
+
 	const float sigmoid = 1.f - (1.f / (1.f + expf(-(alpha * delay - 1.f))));
 	const float offset = gamma * (1.f - powf(normalized_delay, 2.f));
 
@@ -139,14 +139,14 @@ __global__ void fill_G_neuron_count_per_delay_(
 	if (g < G)
 	{
 		const int g_row = g * G;
-		
+
 		int delay = 0;
 		int count_inh = 0;
 		int count_exc = 0;
 
 		const int ioffs_inh = 2 * G + g;
 		const int ioffs_exc = (2 + D) * G + g;
-	
+
 		for (int h = 0; h < G; h++)
 		{
 
@@ -169,9 +169,9 @@ void fill_G_neuron_count_per_delay(
 	const int* G_delay_distance,
 	int* G_neuron_counts
 )
-{	
+{
 	cudaDeviceSynchronize();
-	LaunchParameters launch(G, (void *)fill_G_neuron_count_per_delay_); 
+	LaunchParameters launch(G, (void *)fill_G_neuron_count_per_delay_);
 
 	fill_G_neuron_count_per_delay_ KERNEL_ARGS2(launch.grid3, launch.block3)(
 		static_cast<float>(S),
@@ -181,7 +181,7 @@ void fill_G_neuron_count_per_delay(
 		G_delay_distance,
 		G_neuron_counts
 	);
-	
+
 	cudaDeviceSynchronize();
 	printf("\n");
 }
@@ -189,15 +189,15 @@ void fill_G_neuron_count_per_delay(
 
 __device__ void expected_syn_count(
 	const float fD,
-	const int D, 
-	const int G, 
+	const int D,
+	const int G,
 	const int* G_neuron_counts,
 	const int ioffs_inh,
 	const int ioffs_exc,
 
 	const float alpha_inh, const float beta_inh, const float gamma_inh,
 	const float alpha_exc, const float beta_exc, const float gamma_exc,
-	
+
 	float* exp_cnt_inh, float* exp_cnt_exc,
 	const int group,
 	const bool verbose = 1,
@@ -207,7 +207,7 @@ __device__ void expected_syn_count(
 	*exp_cnt_inh = 0;
 	*exp_cnt_exc = 0;
 
-	
+
 	for (int delay = 0; delay < D; delay++)
 	{
 		const int idx = (delay)*G;
@@ -279,7 +279,7 @@ __device__ void prob_improvement(
 		*gamma = fminf(*gamma * fmaxf(fminf(fS / (expected_count), 1.f + gamma_delta), 1.f - gamma_delta), .3f);
 		// if (group == 0) printf("\n(%d) gamma=%f", group, *gamma);
 	}
-	
+
 }
 
 
@@ -288,7 +288,7 @@ __device__ int roughly_optimize_connection_probabilites(
 	const float fD,
 	const int D,
 	const int G,
-	const int* G_neuron_counts, 
+	const int* G_neuron_counts,
 	const int ioffs_inh, const int ioffs_exc,
 	float* p_alpha_inh, float* p_beta_inh, float* p_gamma_inh,
 	float* p_alpha_exc, float* p_beta_exc, float* p_gamma_exc,
@@ -297,12 +297,12 @@ __device__ int roughly_optimize_connection_probabilites(
 	const bool verbose = 1,
 	const int print_group = 1
 ){
-	
+
 	int j = 0;
 
 	float exp_cnt_inh = 0.f;
 	float exp_cnt_exc = 0.f;
-		
+
 	int mode_inh = 0;
 	int mode_exc = 0;
 
@@ -314,9 +314,9 @@ __device__ int roughly_optimize_connection_probabilites(
 	while (((error_inh > p) || (error_exc > p)) && (j < 300))
 	{
 		expected_syn_count(
-			fD, 
-			D, 
-			G, 
+			fD,
+			D,
+			G,
 			G_neuron_counts,
 			ioffs_inh, ioffs_exc,
 			*p_alpha_inh, *p_beta_inh, *p_gamma_inh,
@@ -328,9 +328,9 @@ __device__ int roughly_optimize_connection_probabilites(
 
 		error_inh = fabsf(exp_cnt_inh - fS);
 		error_exc = fabsf(exp_cnt_exc - fS);
-		
+
 		j++;
-		
+
 		if ((error_inh > p))
 		{
 			prob_improvement(&mode_inh,
@@ -338,7 +338,7 @@ __device__ int roughly_optimize_connection_probabilites(
 			 	exp_cnt_inh, error_inh,
 			 	fS, fD,
 			 	alpha_delta, beta_delta, gamma_delta
-				//, group 
+				//, group
 			);
 		}
 		if ((error_exc > p))
@@ -355,7 +355,7 @@ __device__ int roughly_optimize_connection_probabilites(
 		if ((verbose) && (group == print_group))
 		{
 			printf("\n\n0 (%d, %d) expected_count_inh %f, expected_count_exc %f, modes %d, %d",
-				group, j, exp_cnt_inh, exp_cnt_exc, 
+				group, j, exp_cnt_inh, exp_cnt_exc,
 				mode_inh, mode_exc);
 			// if ((error_inh > p))
 				printf("\n1 (%d, %d) alpha_inh %f, beta_inh %f , gamma_inh %f  \nerror=%f",
@@ -408,15 +408,15 @@ __global__ void fill_G_exp_ccsyn_per_src_type_and_delay_(
 
 		const int opt_runs = roughly_optimize_connection_probabilites(
 				fS,
-				fD, 
+				fD,
 				D,
 				G,
-				G_neuron_counts, 
+				G_neuron_counts,
 				ioffs_inh, ioffs_exc,
 				&alpha_inh, &beta_inh, &gamma_inh,
 				&alpha_exc, &beta_exc, &gamma_exc,
-				alpha_delta, beta_delta, gamma_delta, 
-				g, 
+				alpha_delta, beta_delta, gamma_delta,
+				g,
 				verbose);
 
 		if ((g < 10) && (opt_runs > 98) || ((g == print_group) && (verbose))) {
@@ -468,7 +468,7 @@ __global__ void fill_G_exp_ccsyn_per_src_type_and_delay_(
 			inh_syn_count = min(__float2int_ru(prob_inh * f_n_inh_targets), n_inh_targets);
 			expected_synapses_inh += inh_syn_count;
 			G_exp_ccsyn_per_src_type_and_delay[g + idx + G] = expected_synapses_inh;
-			
+
 			idx += (D + 1) * G;
 			exc_syn_count = __float2int_ru(prob_exc * f_n_exc_targets);
 			expected_synapses_exc += exc_syn_count;
@@ -488,30 +488,30 @@ __global__ void fill_G_exp_ccsyn_per_src_type_and_delay_(
 			// expected_synapses_inh += min(__float2int_ru(prob_inh * f_n_inh_targets), n_inh_targets);
 			if ((verbose) && (g == print_group)) {
 				printf("\nexp inh %f", prob_inh * f_n_inh_targets);
-				printf("\nexp exc %f -> %d | %f (sum=%d)", 
-					prob_exc * f_n_exc_targets, 
+				printf("\nexp exc %f -> %d | %f (sum=%d)",
+					prob_exc * f_n_exc_targets,
 					min(__float2int_ru(prob_exc * f_n_exc_targets), n_exc_targets),
 					roundf(prob_exc * f_n_exc_targets + .5),
 					expected_synapses_exc
-				);  
+				);
 			}
 		}
-		
+
 		// int res_inh = G_exp_ccsyn_per_src_type_and_delay[g + idx - (D * G)];
 		// int res_exc = G_exp_ccsyn_per_src_type_and_delay[g + idx + G];
 
 		if ((expected_synapses_inh != S)){
 			int add = S - expected_synapses_inh;
 			if (expected_synapses_inh > S){
-				if (exp_inh_syn_with_max_targets < 1)  
+				if (exp_inh_syn_with_max_targets < 1)
 				{
 					add = 0;
-					printf("\n(GPU: optimize_connection_probabilites) delay_inh(g=%d, exp_too_low=%d, max_targets=%d) = %d", 
+					printf("\n(GPU: optimize_connection_probabilites) delay_inh(g=%d, exp_too_low=%d, max_targets=%d) = %d",
 					       g, exp_inh_syn_with_max_targets, max_inh_targets, delay_with_max_inh_targets);
 				}
 			} else if (exp_inh_syn_with_max_targets >= max_inh_targets){
 				add = 0;
-				printf("\n(GPU: optimize_connection_probabilites) delay_inh(g=%d, exp_too_high=%d, max_targets=%d) = %d", 
+				printf("\n(GPU: optimize_connection_probabilites) delay_inh(g=%d, exp_too_high=%d, max_targets=%d) = %d",
 					   g, exp_inh_syn_with_max_targets, max_inh_targets, delay_with_max_inh_targets);
 			}
 			if (add != 0){
@@ -525,29 +525,29 @@ __global__ void fill_G_exp_ccsyn_per_src_type_and_delay_(
 		if (expected_synapses_exc != S){
 			int add = S - expected_synapses_exc;
 			if (expected_synapses_exc > S){
-				if (exp_exc_syn_with_max_targets < 1)  
+				if (exp_exc_syn_with_max_targets < 1)
 				{
 					add = 0;
-					printf("\n(GPU: optimize_connection_probabilites) delay_exc(g=%d, exp_too_low=%d, max_targets=%d) = %d", 
+					printf("\n(GPU: optimize_connection_probabilites) delay_exc(g=%d, exp_too_low=%d, max_targets=%d) = %d",
 						   g, exp_exc_syn_with_max_targets, max_exc_targets, delay_with_max_exc_targets);
 				}
 			} else if (exp_exc_syn_with_max_targets >= max_exc_targets){
 				add = 0;
-				printf("\n(GPU: optimize_connection_probabilites) delay_exc(g=%d, exp_too_high=%d, max_targets=%d) = %d", 
+				printf("\n(GPU: optimize_connection_probabilites) delay_exc(g=%d, exp_too_high=%d, max_targets=%d) = %d",
 					   g, exp_exc_syn_with_max_targets, max_exc_targets, delay_with_max_exc_targets);
-			} 
+			}
 			if (add != 0){
 				for (int delay = delay_with_max_exc_targets; delay < D; delay++){
 					G_exp_ccsyn_per_src_type_and_delay[ g + (delay + 2 + D) * G] += add;
 				}
 			}
 			if (G_exp_ccsyn_per_src_type_and_delay[g + (2 * D + 1) * G] != S){
-				printf("\n(GPU: optimize_connection_probabilites) add(g=%d, exp=%d, max_targets=%d) = %d (%d, %d)", 
+				printf("\n(GPU: optimize_connection_probabilites) add(g=%d, exp=%d, max_targets=%d) = %d (%d, %d)",
 					   g, exp_exc_syn_with_max_targets, max_exc_targets, add, expected_synapses_exc,
 					   G_exp_ccsyn_per_src_type_and_delay[g + (2 * D + 1) * G]);
 			}
 
-		} 
+		}
 
 		if ((verbose) && (g == print_group)) {
 			printf("\nres_inh = %d", expected_synapses_inh);
@@ -567,9 +567,9 @@ void fill_G_exp_ccsyn_per_src_type_and_delay(
 	int* G_exp_ccsyn_per_src_type_and_delay,
 	bool verbose
 )
-{	
+{
 	cudaDeviceSynchronize();
-	LaunchParameters launch(G, (void *)fill_G_exp_ccsyn_per_src_type_and_delay_); 
+	LaunchParameters launch(G, (void *)fill_G_exp_ccsyn_per_src_type_and_delay_);
 
 	fill_G_exp_ccsyn_per_src_type_and_delay_ KERNEL_ARGS2(launch.grid3, launch.block3)(
 		S,
@@ -582,7 +582,7 @@ void fill_G_exp_ccsyn_per_src_type_and_delay(
 		G_exp_ccsyn_per_src_type_and_delay,
 		verbose
 	);
-	
+
 	cudaDeviceSynchronize();
 	printf("\n");
 }
@@ -611,22 +611,22 @@ void sort_N_rep(
 
 	// thrust::stable_sort_by_key(N_rep_ptr, N_rep_ptr + N * S, sort_keys_ptr);
 	// thrust::stable_sort_by_key(sort_keys_ptr, sort_keys_ptr + N * S, N_rep_ptr);
-	
+
 	while (n_sorted < N){
-			
+
 	 	if (n_sorted + N_batch_size > N){
 	 		N_batch_size = N - n_sorted;
 			S_batch_size = N_batch_size * S;
-	 	} 
+	 	}
 
 	 	thrust::stable_sort_by_key(N_rep_ptr, N_rep_ptr + S_batch_size, sort_keys_ptr);
 	 	thrust::stable_sort_by_key(sort_keys_ptr, sort_keys_ptr + S_batch_size, N_rep_ptr);
-		
+
 	 	n_sorted += N_batch_size;
 	 	sort_keys_ptr += S_batch_size;
 	 	N_rep_ptr += S_batch_size;
 
-	 	if (verbose) { 
+	 	if (verbose) {
 	 		std::cout << std::string(msg.length(),'\b');
 	 		msg = "sorted: " + std::to_string(n_sorted) + "/" + std::to_string(N);
 	 		std::cout << msg;
@@ -666,7 +666,7 @@ __global__ void reindex_N_rep_(
 	int* n_targets = &sh_delays[(D+1) * blockDim.x];
 
 	const int n = gc_location0 + blockIdx.x * blockDim.x + threadIdx.x;
-	
+
 	if (n < gc_location0 + gc_conn_shape0){
 
 		int print_N = gc_location0 + gc_conn_shape0 - 1;
@@ -678,10 +678,10 @@ __global__ void reindex_N_rep_(
 		for (int d=1; d<D+1; d++)
 		{
 			sh_delays[tdx + d * blockDim.x] = gc_location1 + cc_syn[src_G + d * G];
-			n_targets[tdx + (d-1)* blockDim.x] = G_neuron_counts[src_G + (d-1) * G];	
+			n_targets[tdx + (d-1)* blockDim.x] = G_neuron_counts[src_G + (d-1) * G];
 		}
-		
-		
+
+
 		int N_rep_idx = n * S + gc_location1;
 		int snk_local = N_rep[N_rep_idx];
 		int G_group_delay_counts_idx =  src_G * (D + 1);
@@ -704,20 +704,20 @@ __global__ void reindex_N_rep_(
 
 		//sort_keys[N_rep_idx] = n * S + delay;
 
-		if (verbose && (n == print_N)) 
+		if (verbose && (n == print_N))
 		{
-			printf("(%d, %d, %d in [%d, %d]) N_rep[%d]=%d G_rep[%d]=%d, G_rep[%d]=%d\n",  
+			printf("(%d, %d, %d in [%d, %d]) N_rep[%d]=%d G_rep[%d]=%d, G_rep[%d]=%d\n",
 				src_G, n, gc_location1, delay_col0, delay_col1, N_rep_idx, snk_local,G_rep_idx0, snk_G0, G_rep_idx1, snk_G1);
 		}
 
 		for (int s = gc_location1; s < gc_location1 + gc_conn_shape1; s++){
 
-			N_rep_idx = n * S + s; 
+			N_rep_idx = n * S + s;
 			snk_local = N_rep[N_rep_idx];
 
 			while ((s == delay_col1) && (delay < D+1))
 			{
-				
+
 				// if we reach the end of the write interval, update all variables
 				tdx += blockDim.x;
 				delay_col0 = sh_delays[tdx];
@@ -739,10 +739,10 @@ __global__ void reindex_N_rep_(
 				idx_offset = snk0;
 			}
 
-			if (verbose && (n == print_N)) 
+			if (verbose && (n == print_N))
 			{
-				printf("(%d, %d, %d in [%d, %d]) N_rep[%d]=%d G_rep[%d]=%d, G_rep[%d]=%d #g=%d = (%d - %d)\n",  
-					src_G, n, s, delay_col0, delay_col1, N_rep_idx, snk_local,G_rep_idx0, snk_G0, G_rep_idx1, snk_G1, n_groups_per_delay, 
+				printf("(%d, %d, %d in [%d, %d]) N_rep[%d]=%d G_rep[%d]=%d, G_rep[%d]=%d #g=%d = (%d - %d)\n",
+					src_G, n, s, delay_col0, delay_col1, N_rep_idx, snk_local,G_rep_idx0, snk_G0, G_rep_idx1, snk_G1, n_groups_per_delay,
 					G_group_delay_counts[G_group_delay_counts_idx + 1], G_group_delay_counts[G_group_delay_counts_idx]);
 			}
 
@@ -754,12 +754,12 @@ __global__ void reindex_N_rep_(
 					snk_G0 = G_rep[G_rep_idx0];
 					snk0 = cc_snk[snk_G0];
 					offset_delta = snk0 - snk1;
-	
+
 					snk1 = cc_snk[snk_G0 + 1];
 					idx_offset += offset_delta;
 					snk_global += offset_delta;
 				}
-				
+
 				N_rep[N_rep_idx] = snk_global;
 				sort_keys[N_rep_idx] = n * S + delay;
 			}
@@ -796,10 +796,10 @@ void reindex_N_rep(
 {
 	printf("Reindexing: ((%d, %d), (%d, %d))", gc_location0, gc_location1, gc_conn_shape0, gc_conn_shape1);
 	cudaDeviceSynchronize();
-	LaunchParameters launch(gc_conn_shape0, (void *)reindex_N_rep_); 
+	LaunchParameters launch(gc_conn_shape0, (void *)reindex_N_rep_);
 
 	// l.print_info();
-	
+
 	reindex_N_rep_ KERNEL_ARGS3(launch.grid3, launch.block3, launch.block3.x * ((2 * D) + 1) * sizeof(int))(
 		N,
 		S,
@@ -844,7 +844,7 @@ __global__ void fill_N_rep_groups_(
 
 		for (int s=0; s<S; s++){
 			rep_idx = n + s * N;
-			N_rep_groups[rep_idx] = N_flags[N_rep[rep_idx] + N_flags_row_group * N]; 
+			N_rep_groups[rep_idx] = N_flags[N_rep[rep_idx] + N_flags_row_group * N];
 		}
 	}
 }
@@ -858,7 +858,7 @@ void fill_N_rep_groups(
 	int* N_rep_groups,
     const int N_flags_row_group
 ){
-	LaunchParameters launch(N, (void *)fill_N_rep_groups_); 
+	LaunchParameters launch(N, (void *)fill_N_rep_groups_);
 
 	fill_N_rep_groups_ KERNEL_ARGS2(launch.grid3, launch.block3)(
 		N,
@@ -880,23 +880,23 @@ SnnRepresentation::SnnRepresentation(
 
 	float* N_pos_,
 	int* G_group_delay_counts_,
-    int* G_flags_, 
-    float* G_props_, 
-    int* N_rep_, 
-    int* N_rep_buffer_, 
-    int* N_rep_pre_synaptic_, 
-    int* N_rep_pre_synaptic_idcs_, 
-    int* N_rep_pre_synaptic_counts_, 
-    int* N_delays_, 
+    int* G_flags_,
+    float* G_props_,
+    int* N_rep_,
+    int* N_rep_buffer_,
+    int* N_rep_pre_synaptic_,
+    int* N_rep_pre_synaptic_idcs_,
+    int* N_rep_pre_synaptic_counts_,
+    int* N_delays_,
 
-    int* N_flags_, 
+    int* N_flags_,
 	float* N_weights_,
-    
+
     int* L_winner_take_all_map_,
     int max_n_winner_take_all_layers_,
     int max_winner_take_all_layer_size_
 ){
-    
+
 	N = N_;
 	G = G_;
 	S = S_;
@@ -906,19 +906,19 @@ SnnRepresentation::SnnRepresentation(
 
 	N_pos = N_pos_;
 	G_group_delay_counts = G_group_delay_counts_;
-    G_flags = G_flags_; 
-    G_props = G_props_; 
+    G_flags = G_flags_;
+    G_props = G_props_;
     N_rep = N_rep_;
 
 	N_rep_buffer = N_rep_buffer_;
-    N_rep_pre_synaptic = N_rep_pre_synaptic_; 
-    N_rep_pre_synaptic_idcs = N_rep_pre_synaptic_idcs_; 
+    N_rep_pre_synaptic = N_rep_pre_synaptic_;
+    N_rep_pre_synaptic_idcs = N_rep_pre_synaptic_idcs_;
     N_rep_pre_synaptic_counts = N_rep_pre_synaptic_counts_;
 
     N_delays = N_delays_;
 
 	N_flags = N_flags_;
-	
+
 	N_weights = N_weights_;
 
 	L_winner_take_all_map = L_winner_take_all_map_;
@@ -950,14 +950,14 @@ __device__ int relative_typed_delay_rep_index(
 	int Ng_start = cc_snk[g];
 	const int Ng_last = cc_snk[G_rep[G_rep_idx1] +1];
 
-	
+
 	if ((N_autapse_idx < Ng_start) || (N_autapse_idx >= Ng_last))
 	{
 		return -1;
 		if (verbose)
 		{
 			printf(
-			"(search, not in range) g=(%d), n=%d, G_rep[%d: %d], Ng_start=%d, Ng_last=%d\n", 
+			"(search, not in range) g=(%d), n=%d, G_rep[%d: %d], Ng_start=%d, Ng_last=%d\n",
 			g, N_autapse_idx, G_rep_idx0, G_rep_idx1, Ng_start, Ng_last);
 		}
 	}
@@ -977,15 +977,15 @@ __device__ int relative_typed_delay_rep_index(
 	//	printf("\n  (%d)  [%d], src_G %d, g = %d [%d, %d]... %d]",
 	//		N_autapse_idx, result, src_G, g, start_col_next_group, end_col_next_group, last_col);
 	//}
-	
+
 	bool found = (N_autapse_idx >= Ng_start) && (N_autapse_idx < Ng_next);
 
 	int Ng_prev = Ng_next;
-	
+
 	while ((!found) && (G_rep_idx < G_rep_idx1))
 	{
 		G_rep_idx++;
-		
+
 		g = G_rep[G_rep_idx];
 		Ng_start = cc_snk[g];
 		Ng_next = cc_snk[g + 1];
@@ -1016,13 +1016,13 @@ __global__ void fill_relative_autapse_indices_(
 )
 {
 	const int g = blockIdx.x * blockDim.x + threadIdx.x;  // NOLINT(bugprone-narrowing-conversions, cppcoreguidelines-narrowing-conversions)
-	
+
 	if (g < G)
 	{
-		
+
 		const int N_autapse_idx = cc_src[g];
 		const int g_N_count = cc_src[g + 1] - N_autapse_idx;
-	
+
 		for (int d=0; d < D; d++)
 		{
 			const int g_rep_col0 = G_delay_counts[g * (D + 1) + d];
@@ -1033,8 +1033,8 @@ __global__ void fill_relative_autapse_indices_(
 
 			if (verbose && (g == print_group))
 			{
-				printf("g=(%d), n=%d, d=%d, g_rep_cols=[%d, %d], idcs=[%d,%d], groups=[%d, ...,%d]\n", 
-					g, N_autapse_idx, d, 
+				printf("g=(%d), n=%d, d=%d, g_rep_cols=[%d, %d], idcs=[%d,%d], groups=[%d, ...,%d]\n",
+					g, N_autapse_idx, d,
 					g_rep_col0, g_rep_col1,
 					G_rep_idx0, G_rep_idx1,
 					G_rep[G_rep_idx0], G_rep[G_rep_idx1]);
@@ -1061,8 +1061,8 @@ __global__ void fill_relative_autapse_indices_(
 
 			if (verbose && (g == print_group))
 			{
-				printf("g=(%d), n=%d, d=%d, N=%d, rN=%d\n", 
-					g, N_autapse_idx, d, 
+				printf("g=(%d), n=%d, d=%d, N=%d, rN=%d\n",
+					g, N_autapse_idx, d,
 					G_autapse_indices[g + d * G],
 					relative_autapse_index);
 			}
@@ -1084,13 +1084,13 @@ __forceinline__ __device__ int random_uniform_int(curandState *local_state, cons
 }
 
 __device__ int random_uniform_int_with_exclusion(
-	curandState *local_state, 
-	const float minf, 
+	curandState *local_state,
+	const float minf,
 	const float maxf,
 	const float maxf0,
 	const bool exclude,
 	const int autapse_idx,
-	const int n, 
+	const int n,
 	const int s
 ){
 	int new_sink = __float2int_rd(fminf(minf + curand_uniform(local_state) * (maxf - minf + 1.f), maxf));
@@ -1102,16 +1102,16 @@ __device__ int random_uniform_int_with_exclusion(
 			i++;
 		}
 
-		if (i < 50){ return new_sink; } else { 
-			printf("\n Loop-Warning [autapse_2](%d, %d) range=[%f, %f] -> [%f, %f], autapse_idx=%d, sink=%d", 
-				   n, s, 0.f, maxf0, minf, maxf, autapse_idx, new_sink); 
+		if (i < 50){ return new_sink; } else {
+			printf("\n Loop-Warning [autapse_2](%d, %d) range=[%f, %f] -> [%f, %f], autapse_idx=%d, sink=%d",
+				   n, s, 0.f, maxf0, minf, maxf, autapse_idx, new_sink);
 		}
 	}
 }
 
 
 __device__ void print_array(int* arr, int r, int c, int col0, int sep_row){
-	
+
 	printf("\n\n");
 	int v;
 	for (int i=0; i < c; i++)
@@ -1148,8 +1148,8 @@ __device__ void print_array(int* arr, int r, int c, int col0, int sep_row){
 __device__ bool duplicated_int(
 	const int min_hit, const int max_hit,
 	const int row_idx0,
-	const int n, const int s, 
-	const float maxf0, const float minf, const float maxf, 
+	const int n, const int s,
+	const float maxf0, const float minf, const float maxf,
 	const int delay_col0, const int delay_col1, const int autapse_idx, const int new_sink,
 	int* N_rep,
 	const int k
@@ -1157,23 +1157,23 @@ __device__ bool duplicated_int(
 	int i = delay_col0;
 
 	if ((k==45)){
-		printf("\n Loop-Warning [duplicated](%d, %d) range=[%f, %f] -> [%f, %f], delay_cols=[%d,%d], autapse_idx=%d, sink=%d", 
+		printf("\n Loop-Warning [duplicated](%d, %d) range=[%f, %f] -> [%f, %f], delay_cols=[%d,%d], autapse_idx=%d, sink=%d",
 			n, s, 0.f, maxf0, minf, maxf, delay_col0, delay_col1, autapse_idx, new_sink);}
-	
+
 	// check if the drawn integer has alredy been set
 
 	if ((min_hit < new_sink) && (new_sink < max_hit)) {
 		while (i < s) {
-			if (N_rep[row_idx0 + i] == new_sink) { 
+			if (N_rep[row_idx0 + i] == new_sink) {
 				if ((k >= 45)){
-					printf("\nLoop-Warning [duplicated (%d)](%d, %d), col0=%d, write_idx=%d, k=%d) rep=%d sink=%d", 
+					printf("\nLoop-Warning [duplicated (%d)](%d, %d), col0=%d, write_idx=%d, k=%d) rep=%d sink=%d",
 					true, n, s, i, row_idx0 + i, k, N_rep[row_idx0 + i], new_sink);}
 				return true; }
 			i++;
 		}
-	} else if ((new_sink == min_hit) || (new_sink == max_hit)){ 
+	} else if ((new_sink == min_hit) || (new_sink == max_hit)){
 		if ((k >= 45)){
-			printf("\nLoop-Warning [duplicated (%d) hit](%d, %d), col0=%d, write_idx=%d, k=%d) rep=%d sink=%d", 
+			printf("\nLoop-Warning [duplicated (%d) hit](%d, %d), col0=%d, write_idx=%d, k=%d) rep=%d sink=%d",
 			true, n, s, i, row_idx0 + i, k, N_rep[row_idx0 + i], new_sink);}
 		return true; }
 	return false;
@@ -1211,11 +1211,11 @@ __global__ void k_set_locally_indexed_connections(
 	const int n = gc_location0 + blockIdx.x * blockDim.x + threadIdx.x;
 
 	//{ printf("(%d, 0) = %d\n", n, N_rep[n * S]);}
-	
+
 	if (n < gc_location0 + gc_conn_shape0)
 	{
 		curandState local_state = curand_states[n];
-		
+
 		const int src_G = N_flags[n + N_flags_row_group * N];
 		int tdx = threadIdx.x;
 		const int row_idx0 = n * S;
@@ -1223,46 +1223,46 @@ __global__ void k_set_locally_indexed_connections(
 		N_delays[n] = 0;
 
 		// if (n == gc_location0){print_array(sh_delays, 2 * D + 1, blockDim.x, gc_location1);}
-		
+
 		sh_delays[tdx] = gc_location1;
 
 		for (int d=1; d<D+1; d++)
 		{
 			int end_rep_col = cc_syn[src_G + d * G];
-			
+
 			sh_delays[tdx + d * blockDim.x] = gc_location1 + end_rep_col;
 			n_targets[tdx + (d-1)* blockDim.x] = G_neuron_counts[src_G + (d-1) * G];
-			
+
 			N_delays[n + d * N] += end_rep_col;
-			
+
 		}
 
 		if ((verbose) && (n == gc_location0)){ print_array(sh_delays, 2 * D + 1, blockDim.x, gc_location0, D + 1); }
 
 		int sort_key = row_idx0 + gc_location1; // + gc_location1 + max(0, (D - S) * n);
-		
+
 		// [delay_col0, delay_col1]: column-interval in which to write sink neurons
 		int delay = 0;
 		int delay_col0 = sh_delays[tdx];
 		int delay_col1 = sh_delays[tdx + blockDim.x];
 		int n_rep_cols = delay_col1 - delay_col0;
-		
+
 		// [min, max]: interval from which to draw an integer ('sink'-neuron)
 		int min = 0;
 		int max = n_targets[tdx] - 1;
 		float maxf = __int2float_rn(max);
 		float minf = 0.f;
 		float maxf0 = maxf;
-		
+
 		int autapse_idx = -1;
-		if (has_autapses){ 
-			autapse_idx = G_relative_autapse_indices[src_G + delay * G] + (n - cc_src[src_G]); 
+		if (has_autapses){
+			autapse_idx = G_relative_autapse_indices[src_G + delay * G] + (n - cc_src[src_G]);
 		}
 		int new_sink;
 
 		int min_hit = -1;
 		int max_hit = gc_location1 + gc_conn_shape1;
-				
+
 		// fill N_rep[n, s] for in [gc_location1, gc_location1 + gc_conn_shape1]
 		for (int s = gc_location1; s < gc_location1 + gc_conn_shape1; s++)
 		{
@@ -1286,25 +1286,25 @@ __global__ void k_set_locally_indexed_connections(
 					minf = 0.f;
 					maxf0 = __int2float_rn(max);
 					maxf = maxf0;
-					sort_key = write_idx;				
+					sort_key = write_idx;
 				}
 				delay++;
 			}
 
-			if (n_rep_cols > 0) {	
+			if (n_rep_cols > 0) {
 
-				if (min > max){ printf("\n Warning [min>max] (%d, %d in [%d, %d], d=%d) %d > %d, range=[%f, %f] targets %d/%d", 
-				n, s, delay, delay_col0, delay_col1, min, max, 
+				if (min > max){ printf("\n Warning [min>max] (%d, %d in [%d, %d], d=%d) %d > %d, range=[%f, %f] targets %d/%d",
+				n, s, delay, delay_col0, delay_col1, min, max,
 				0.f, maxf0, n_targets[tdx], G_neuron_counts[src_G + (delay) * G]); }
 
 				new_sink = random_uniform_int_with_exclusion(&local_state, minf, maxf, maxf0, (has_autapses) && (delay == 0), autapse_idx, n, s);
 
-				
+
 				if (s == delay_col0){
 					min_hit = new_sink;
 					max_hit = new_sink;
 				} else {
-					
+
 					int k = 0;
 					bool duplicated = true;
 					while (duplicated && (k<=50))
@@ -1315,7 +1315,7 @@ __global__ void k_set_locally_indexed_connections(
 						}
 						k++;
 					}
-				} 
+				}
 
 				// we can narrow the range if we hit the border
 				//if (new_sink > max){ printf("\n Loop-Warning [new_sink>max] (%d, %d) range=[%f, %f] -> [*, %d], sink=%d", n, s, 0.f, maxf0, max, new_sink); }
@@ -1323,14 +1323,14 @@ __global__ void k_set_locally_indexed_connections(
 				else if (new_sink == min){ min++; minf += 1.f; }
 				else if (new_sink < min_hit){ min_hit = new_sink; }
 				else if (new_sink > max_hit){ max_hit = new_sink; }
-				
+
 				sort_keys[write_idx] = sort_key;
-				N_rep[write_idx] = new_sink;	
+				N_rep[write_idx] = new_sink;
 
 				// if (n == gc_location0) { printf("(%d, %d) = %d\n", n, s, N_rep[write_idx]);}
-			}	
+			}
 		}
-		
+
 		curand_states[n] = local_state;
 	}
 }
@@ -1357,7 +1357,7 @@ void SnnRepresentation::fill_N_rep(
 {
 	printf("Connecting: ((%d, %d), (%d, %d))", gc_location0, gc_location1, gc_conn_shape0, gc_conn_shape1);
 	cudaDeviceSynchronize();
-	LaunchParameters launch(G, (void *)fill_relative_autapse_indices_); 
+	LaunchParameters launch(G, (void *)fill_relative_autapse_indices_);
 	fill_relative_autapse_indices_ KERNEL_ARGS2(launch.grid3, launch.block3)(
 		D,
 		G,
@@ -1371,12 +1371,12 @@ void SnnRepresentation::fill_N_rep(
 
 	const int block_size_limit = 64;
 	const int shared_memory_size = block_size_limit * ((2 * D) + 1) * sizeof(int);
-	
+
 	LaunchParameters l(gc_conn_shape0, (void*)k_set_locally_indexed_connections, block_size_limit, shared_memory_size);
 	cudaDeviceSynchronize();
 
 	// l.print_info();
-	
+
 	k_set_locally_indexed_connections KERNEL_ARGS3(l.grid3, l.block3, l.block3.x * ((2 * D) + 1) * sizeof(int))(
 		N,
 		S,
@@ -1432,11 +1432,11 @@ void SnnRepresentation::fill_N_rep_python(
     int* sort_keys = reinterpret_cast<int*> (sort_keys_dp);
 
     fill_N_rep(
-        cc_src, 
+        cc_src,
         cc_snk,
-        G_rep, 
-        G_neuron_counts, 
-        G_autapse_indices, 
+        G_rep,
+        G_neuron_counts,
+        G_autapse_indices,
         G_relative_autapse_indices,
         has_autapses,
         gc_location[0].cast<int>(), gc_location[1].cast<int>(),
@@ -1449,15 +1449,15 @@ void SnnRepresentation::fill_N_rep_python(
 }
 
 __device__ void roll_copy(
-	
-	int* write_array, int* read_array, 
-	int write_col, int read_col, 
-	int write_row_start, 
+
+	int* write_array, int* read_array,
+	int write_col, int read_col,
+	int write_row_start,
 	int n_write_array_cols, int n_read_array_cols,
-	const int copy_length, 
-	const int read_offset, 
+	const int copy_length,
+	const int read_offset,
 	bool bprint){
-	
+
 	int write_idx;
 	int read_idx;
 	//int roll_mod = abs(swap_snk_N_s_start - swap_src_N_s_start);
@@ -1468,16 +1468,16 @@ __device__ void roll_copy(
 		read_idx = read_col + (write_row_start + ((s +  read_offset) % copy_length)) * n_read_array_cols;
 
 		if (bprint){
-			printf("\nwrite_array[%d, %d]=%d -> read_array[%d, %d]=%d", 
-			write_row_start + s, write_col, 
-			write_array[write_idx], 
+			printf("\nwrite_array[%d, %d]=%d -> read_array[%d, %d]=%d",
+			write_row_start + s, write_col,
+			write_array[write_idx],
 			write_row_start + ((s +  read_offset) % copy_length), read_col,
 			read_array[read_idx] );
 		}
 
 		write_array[write_idx] = read_array[read_idx];
 
-	}	
+	}
 
 }
 
@@ -1499,39 +1499,39 @@ __device__ void shift_values_row_wise_(
 		for (int k=shift_start_offset; k < 0; k++){
 			value0 = array0[idx_end0 + (k+swap_dir) * n_cols0];
 			if (value0 > 0){
-	
+
 				if (bprint){
 					printf("\nN_rep[%d, %d] = %d -> %d, G_swap_index[%d, %d] = %d -> %d",
 						end_row + k, idx_end0, array0[idx_end0 + k * n_cols0], value0,
 						end_row + k, idx_end1, array1[idx_end1 + k * n_cols1], array1[idx_end1 + (k+swap_dir) * n_cols1]
 					);
-		
+
 				}
-	
+
 				array0[idx_end0 + k * n_cols0] = value0;
 				array1[idx_end1 + k * n_cols1] = array1[idx_end1 + (k+swap_dir) * n_cols1];
 			}
-		
+
 		}
 	}
-	
+
 	else if (swap_dir == -1){
 		for (int k=0; k > shift_start_offset; k--){
 			value0 = array0[idx_end0 + (k+swap_dir) * n_cols0];
 			if (value0 > 0){
-	
+
 				if (bprint){
 					printf("\nN_rep[%d, %d] = %d -> %d, G_swap_index[%d, %d] = %d -> %d",
 						end_row + k, idx_end0, array0[idx_end0 + k * n_cols0], value0,
 						end_row + k, idx_end1, array1[idx_end1 + k * n_cols1], array1[idx_end1 + (k+swap_dir) * n_cols1]
 					);
-		
+
 				}
-	
+
 				array0[idx_end0 + k * n_cols0] = value0;
 				array1[idx_end1 + k * n_cols1] = array1[idx_end1 + (k+swap_dir) * n_cols1];
 			}
-		
+
 		}
 	}
 
@@ -1548,14 +1548,14 @@ __device__ void generate_synapses(
 	int& swap_src_G_count, int& swap_snk_G_count,
 	const int max_snk_count,
 	curandState &local_state,
-	int G_swap_tensor_shape_1, 
+	int G_swap_tensor_shape_1,
 	const int swap_type,
 	const int index_offset,
 	const int relative_index_offset,
 	const int swap_dir,
 	bool bprint
 ){
-	
+
 	int snk_N;
 	int min_G_swap_snk = G_swap_tensor[neuron_idx + swap_snk_N_s_start * G_swap_tensor_shape_1];
 	int max_G_swap_snk = G_swap_tensor[neuron_idx + (swap_snk_N_s_start + swap_snk_G_count - 1) * G_swap_tensor_shape_1];
@@ -1566,25 +1566,25 @@ __device__ void generate_synapses(
 	float r;
 
 	int s_end = swap_src_N_s_start + swap_src_G_count;
-	
+
 
 	for (int s=swap_src_N_s_start; s < s_end; s++){
 	// for (int s=swap_src_N_s_start; s < swap_src_N_s_start + 2; s++){
-		
+
 		r = curand_uniform(&local_state);
 
 		snk_N = __float2int_rd(r * __int2float_rn(max_snk_count)) + relative_index_offset;
-			
-				
-		if (bprint) printf("\n[%d, %d] new=%d (%f), t=%d, s=%d, [%d, %d], [offset = %d - %d]", 
+
+
+		if (bprint) printf("\n[%d, %d] new=%d (%f), t=%d, s=%d, [%d, %d], [offset = %d - %d]",
 						   n, neuron_idx, snk_N, r, swap_type, s,
-						   min_G_swap_snk, max_G_swap_snk, 
+						   min_G_swap_snk, max_G_swap_snk,
 						   index_offset, relative_index_offset);
 
 		if (swap_snk_G_count < max_snk_count)
-		{	
+		{
 			bool found = false;
-			int i = 0;	
+			int i = 0;
 			int j = 0;
 			int swap_idx = neuron_idx + (swap_snk_N_s_start)  * G_swap_tensor_shape_1;
 			int G_swap0;
@@ -1597,21 +1597,21 @@ __device__ void generate_synapses(
 
 			// while ((!found) && (j < 40)){
 			while ((!found) && (j < G_swap_tensor_shape_1)){
-				
+
 				write_mode = 0;
 				//write_row = s - s_offset;
 				// write = -i;
 				swap_idx = neuron_idx + (swap_snk_N_s_start + i )  * G_swap_tensor_shape_1;
-				
+
 				G_swap0 = G_swap_tensor[swap_idx];
 				G_swap_m1 = G_swap_tensor[swap_idx - G_swap_tensor_shape_1];
 
 
 				if((snk_N < min_G_swap_snk) || (swap_snk_G_count == 0)){
-				
-	
+
+
 					min_G_swap_snk = snk_N;
-					
+
 					if (swap_dir == 1){
 						write_row = swap_snk_N_s_start - 1;
 					} else {
@@ -1622,8 +1622,8 @@ __device__ void generate_synapses(
 					if (swap_snk_G_count == 0){
 						max_G_swap_snk = snk_N;
 					}
-					// G_swap_tensor[swap_idx - G_swap_tensor_shape_1] = G_swap0;	
-					// G_swap_tensor[swap_idx] = snk_N;		
+					// G_swap_tensor[swap_idx - G_swap_tensor_shape_1] = G_swap0;
+					// G_swap_tensor[swap_idx] = snk_N;
 				}
 				else if((snk_N > max_G_swap_snk)){
 					write_mode = 2;
@@ -1636,7 +1636,7 @@ __device__ void generate_synapses(
 					} else {
 						write_row = swap_snk_N_s_start + swap_snk_G_count;
 					}
-					
+
 
 				}
 				else if ((G_swap_m1 < snk_N) && (snk_N < G_swap0)){
@@ -1646,7 +1646,7 @@ __device__ void generate_synapses(
 					} else {
 						write_row = swap_snk_N_s_start + i;
 					}
-					
+
 				}
 
 				found = write_mode > 0;
@@ -1657,14 +1657,14 @@ __device__ void generate_synapses(
 					} else {
 						swap_src_N_s_start += 1;
 					}
-					
+
 					// write = snk_N;
 					// s_offset++;
 					swap_snk_G_count++;
 					swap_src_G_count--;
 					// G_swap_tensor[neuron_idx + (write_row) * G_swap_tensor_shape_1] = write;
 					break;}
-				
+
 
 				if ((snk_N == G_swap0)){
 					snk_N = (snk_N + 1) % max_snk_count;
@@ -1672,25 +1672,25 @@ __device__ void generate_synapses(
 
 				// if (bprint || (j >= 30)) {
 				if (bprint) {
-					printf("\n[%d, %d] + new=%d[i=%d, write_mode=%d] G_swap_m1=%d, G_swap0=%d, [%d, %d], max_snk_count=%d, (%d), swap_snk_G_count=%d, s=%d", 
-						n, neuron_idx, snk_N, i, write_mode, G_swap_m1, G_swap0, 
+					printf("\n[%d, %d] + new=%d[i=%d, write_mode=%d] G_swap_m1=%d, G_swap0=%d, [%d, %d], max_snk_count=%d, (%d), swap_snk_G_count=%d, s=%d",
+						n, neuron_idx, snk_N, i, write_mode, G_swap_m1, G_swap0,
 						min_G_swap_snk,
 						max_G_swap_snk,
 						max_snk_count, swap_type, swap_snk_G_count, s);
 				}
-				
+
 				i = (i + 1) % swap_snk_G_count;
 				j++;
 
 				// if (j >= 10){
-				// 	printf("\nn=%d; new=%d[%d] G_swap0=%d, max_snk_count=%d, (%d), s=%d", 
+				// 	printf("\nn=%d; new=%d[%d] G_swap0=%d, max_snk_count=%d, (%d), s=%d",
 				// 		   n, snk_N, i, G_swap0, max_snk_count, swap_type, s);
 				// }
 			}
 
 			// if (bprint || (j >= 30)) {
 			if (false) {
-				printf("\n[%d, %d] (found j=%d, mod:%d->%d) N_rep[%d, %d]=%d (%d) [%d (snk_N) + %d - %d]", 
+				printf("\n[%d, %d] (found j=%d, mod:%d->%d) N_rep[%d, %d]=%d (%d) [%d (snk_N) + %d - %d]",
 					n, neuron_idx, j, last_write_mode, write_mode,
 					write_row, n, N_rep[n + (write_row) * N], N_rep[n + (swap_snk_N_s_start-1) * N], snk_N,
 					index_offset, relative_index_offset);
@@ -1726,13 +1726,13 @@ __device__ void generate_synapses(
 			// bprint || (j >= 30)
 
 			if (bprint  ) {
-				printf("\n[%d, %d] (found j=%d, mod:%d->%d) N_rep[%d, %d]=%d (%d) [%d (snk_N) + %d - %d]", 
+				printf("\n[%d, %d] (found j=%d, mod:%d->%d) N_rep[%d, %d]=%d (%d) [%d (snk_N) + %d - %d]",
 					n, neuron_idx, j, last_write_mode, write_mode,
 					write_row, n, N_rep[n + (write_row) * N], N_rep[n + (swap_snk_N_s_start-1) * N], snk_N,
 					index_offset, relative_index_offset);
 			}
 			last_write_mode = write_mode;
-		} 
+		}
 
 		// 	swap_snk_G_count++;
 	}
@@ -1742,12 +1742,12 @@ __device__ void generate_synapses(
 
 
 __global__ void swap_groups_(
-	const long* neurons, const int n_neurons, 
+	const long* neurons, const int n_neurons,
 	const long* groups, const int n_groups,
 	const int* neuron_group_indices,
 	int* G_swap_tensor, const int G_swap_tensor_shape_1,
 	const float* swap_rates,
-	const int* group_neuron_counts_inh, const int* group_neuron_counts_exc, const int* group_neuron_counts_total, 
+	const int* group_neuron_counts_inh, const int* group_neuron_counts_exc, const int* group_neuron_counts_total,
 	const int* G_delay_distance,
 	const int* N_relative_G_indices, const int* G_neuron_typed_ccount,
 	int N,
@@ -1764,7 +1764,7 @@ __global__ void swap_groups_(
 	const int N_flags_row_type = 1,
 	const int N_flags_row_group = 2
 ){
-	const int neuron_idx = blockIdx.x * blockDim.x + threadIdx.x; 
+	const int neuron_idx = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (neuron_idx < n_neurons){
 
@@ -1772,7 +1772,7 @@ __global__ void swap_groups_(
 		bool bprint = false;
 
 		const int n = neurons[neuron_idx];
-		
+
 		const int group_index = neuron_group_indices[neuron_idx];
 		const int snk_group_index = group_index + 2 * n_groups;
 
@@ -1785,8 +1785,8 @@ __global__ void swap_groups_(
 		const int total_src_G_count = group_neuron_counts_total[group_index];
 		const int total_snk_G_count = group_neuron_counts_total[snk_group_index];
 
-		if (bprint){		
-			printf("\n\nswap_src %d (%d), src_G %d %d (%d), swap_snk %d (%d)  neuron_group_indices[%d] = %d\n", 
+		if (bprint){
+			printf("\n\nswap_src %d (%d), src_G %d %d (%d), swap_snk %d (%d)  neuron_group_indices[%d] = %d\n",
 			swap_src_G, total_src_G_count,
 			N_flags[n + N_flags_row_group * N], src_G, group_neuron_counts_total[snk_group_index - n_groups],
 			swap_snk_G, total_snk_G_count, neuron_idx, (int)neuron_group_indices[neuron_idx]);
@@ -1810,31 +1810,31 @@ __global__ void swap_groups_(
 
 		for (int s=s_start; s < s_end; s++)
 		{
-			
+
 			snk_N = N_rep[n + s * N];
 			snk_type = N_flags[snk_N * 2];
-			
+
 
 			if (snk_type == expected_snk_type){
-				
-				
+
+
 				snk_G = N_flags[snk_N + N_flags_row_group * N];
 
 				if (snk_G == swap_src_G)
 				{
-					
+
 					if (swap_src_G_count == 0){
 						swap_src_N_s_start = s;
 					}
 					swap_src_G_count += 1;
 
 					G_swap_tensor[neuron_idx + s * G_swap_tensor_shape_1] = -total_src_G_count-N_rep[n + s * N]; //-2;
-					if (bprint) printf("\n(%d) n_snk=%d, (snk_G=%d)  (s=%d) %d %d, src_counts=[%d, ]", 
-						n, N_rep[n + s * N], snk_G, s, snk_G == swap_src_G, snk_G == swap_snk_G, 
+					if (bprint) printf("\n(%d) n_snk=%d, (snk_G=%d)  (s=%d) %d %d, src_counts=[%d, ]",
+						n, N_rep[n + s * N], snk_G, s, snk_G == swap_src_G, snk_G == swap_snk_G,
 						swap_src_G_count);
-					
+
 					N_rep[n + s * N] = -1;
-					
+
 				}
 				else if (snk_G == swap_snk_G)
 				{
@@ -1843,24 +1843,24 @@ __global__ void swap_groups_(
 							swap_snk_N_s_start = s;
 						}
 						swap_snk_G_count += 1;
-					} 
+					}
 
 					G_swap_tensor[neuron_idx + s * G_swap_tensor_shape_1] = N_relative_G_indices[snk_N];
-					
-					if (bprint) printf("\n(%d) n_snk=%d, (snk_G=%d)  (s=%d) %d %d, snk_N_rel=%d", 
-						n, N_rep[n + s * N], snk_G, s, 
-						snk_G == swap_src_G, snk_G == swap_snk_G, 
+
+					if (bprint) printf("\n(%d) n_snk=%d, (snk_G=%d)  (s=%d) %d %d, snk_N_rel=%d",
+						n, N_rep[n + s * N], snk_G, s,
+						snk_G == swap_src_G, snk_G == swap_snk_G,
 						N_relative_G_indices[snk_N]);
-				} 
-				else if((swap_src_G_count > 0) || (swap_snk_G_count > 0)){
-					G_swap_tensor[neuron_idx + s * G_swap_tensor_shape_1] = N_rep[n + s * N];	
 				}
-			} 
+				else if((swap_src_G_count > 0) || (swap_snk_G_count > 0)){
+					G_swap_tensor[neuron_idx + s * G_swap_tensor_shape_1] = N_rep[n + s * N];
+				}
+			}
 			else if((swap_src_G_count > 0) || (swap_snk_G_count > 0))
 			{
-				G_swap_tensor[neuron_idx + s * G_swap_tensor_shape_1] = N_rep[n + s * N];	
+				G_swap_tensor[neuron_idx + s * G_swap_tensor_shape_1] = N_rep[n + s * N];
 			}
-			
+
 		}
 
 		if (swap_snk_G_count == 0){
@@ -1885,41 +1885,41 @@ __global__ void swap_groups_(
 
 
 		if (bprint){
-			printf("\n\nrow intervals: src=[%d, %d (+%d)) snk=[%d, %d (+%d)), swap_rate=%f\n", 
-				   swap_src_N_s_start, swap_src_N_s_start + swap_src_G_count, 
-				   swap_src_G_count, 
+			printf("\n\nrow intervals: src=[%d, %d (+%d)) snk=[%d, %d (+%d)), swap_rate=%f\n",
+				   swap_src_N_s_start, swap_src_N_s_start + swap_src_G_count,
+				   swap_src_G_count,
 				   swap_snk_N_s_start, swap_snk_N_s_start + swap_snk_G_count,
 				   swap_snk_G_count, swap_rate);
-					//    printf("exc: src=[%d, +%d] snk=[%d, +%d]\n", 
+					//    printf("exc: src=[%d, +%d] snk=[%d, +%d]\n",
 					//    swap_src_N_s_start_exc, swap_src_G_count_exc, swap_snk_N_s_start_exc, swap_snk_G_count_exc);
 		}
 
 		if (swap_src_G_count > 0){
 
-			int distance = max(swap_snk_N_s_start - (swap_src_N_s_start + swap_src_G_count), 
+			int distance = max(swap_snk_N_s_start - (swap_src_N_s_start + swap_src_G_count),
 						       min(0, swap_snk_N_s_start + swap_snk_G_count - swap_src_N_s_start));
 
 			int swap_dir = 1 * (swap_snk_N_s_start > swap_src_N_s_start) + -1 * (swap_snk_N_s_start < swap_src_N_s_start);
-			
+
 			if (distance != 0){
 
 				// if (swap_dir == 1){
 					roll_copy(
-						N_rep, G_swap_tensor, 
-						n, neuron_idx, 
-						min(swap_src_N_s_start, swap_snk_N_s_start + swap_snk_G_count), 
-						N, G_swap_tensor_shape_1, 
-						(swap_snk_N_s_start - swap_src_N_s_start) * (swap_dir == 1) + (swap_dir == -1) * (-distance + swap_src_G_count), 
-						swap_src_G_count * (swap_dir == 1) - distance *  (swap_dir == -1), 
+						N_rep, G_swap_tensor,
+						n, neuron_idx,
+						min(swap_src_N_s_start, swap_snk_N_s_start + swap_snk_G_count),
+						N, G_swap_tensor_shape_1,
+						(swap_snk_N_s_start - swap_src_N_s_start) * (swap_dir == 1) + (swap_dir == -1) * (-distance + swap_src_G_count),
+						swap_src_G_count * (swap_dir == 1) - distance *  (swap_dir == -1),
 						bprint);
 				// } else {
 				// 	roll_copy(
-				// 		N_rep, G_swap_tensor, 
-				// 		n, neuron_idx, 
-				// 		swap_snk_N_s_start, 
-				// 		N, G_swap_tensor_shape_1, 
-				// 		swap_snk_N_s_start - swap_src_N_s_start, 
-				// 		swap_dir * swap_src_G_count, 
+				// 		N_rep, G_swap_tensor,
+				// 		n, neuron_idx,
+				// 		swap_snk_N_s_start,
+				// 		N, G_swap_tensor_shape_1,
+				// 		swap_snk_N_s_start - swap_src_N_s_start,
+				// 		swap_dir * swap_src_G_count,
 				// 		bprint);
 				// }
 
@@ -1974,18 +1974,18 @@ __global__ void swap_groups_(
 
 			int swap_src_G_count = 0;
 			int swap_snk_G_count = 0;
-		
+
 			for (int s=0; s < S; s++){
-				snk_G = N_flags[N_rep[n + s * N] + N_flags_row_group * N]; 
+				snk_G = N_flags[N_rep[n + s * N] + N_flags_row_group * N];
 				G_swap_tensor[neuron_idx + s * G_swap_tensor_shape_1] = snk_G;
 				swap_src_G_count += (snk_G == swap_src_G);
 				swap_snk_G_count += (snk_G == swap_snk_G);
-			}	
+			}
 			neuron_group_counts[neuron_idx] = swap_src_G_count;
 			neuron_group_counts[neuron_idx + G_swap_tensor_shape_1] = swap_snk_G_count;
 
 			if (swap_delay_src != swap_delay_snk){
-				
+
 				int d1 = max(swap_delay_src, swap_delay_snk);
 				int count0 = swap_delay_src;
 
@@ -1994,14 +1994,14 @@ __global__ void swap_groups_(
 				}
 			}
 		}
-	
+
 	}
 }
 
 
 void SnnRepresentation::swap_groups(
-	long* neurons, const int n_neurons, 
-	long* groups, const int n_groups, 
+	long* neurons, const int n_neurons,
+	long* groups, const int n_groups,
 	int* neuron_group_indices,
 	int* G_swap_tensor, const int G_swap_tensor_shape_1,
 	float* swap_rates_inh, float* swap_rates_exc,
@@ -2066,20 +2066,20 @@ void SnnRepresentation::swap_groups(
 }
 
 void SnnRepresentation::swap_groups_python(
-	long neurons, const int n_neurons, 
-	long groups, const int n_groups, 
+	long neurons, const int n_neurons,
+	long groups, const int n_groups,
 	const long neuron_group_indices,
 	const long G_swap_tensor, const int G_swap_tensor_shape_1,
 	const long swap_rates_inh, const long swap_rates_exc,
 	const long group_neuron_counts_inh, const long group_neuron_counts_exc, const long group_neuron_counts_total,
-	const long G_delay_distance, 
+	const long G_delay_distance,
 	const long N_relative_G_indices, const long G_neuron_typed_ccount,
 	long neuron_group_counts,
 	const int print_idx
 )
 {
-	swap_groups(reinterpret_cast<long*> (neurons), n_neurons, 
-				reinterpret_cast<long*> (groups), n_groups, 
+	swap_groups(reinterpret_cast<long*> (neurons), n_neurons,
+				reinterpret_cast<long*> (groups), n_groups,
 				reinterpret_cast<int*> (neuron_group_indices),
 				reinterpret_cast<int*> (G_swap_tensor), G_swap_tensor_shape_1,
 				reinterpret_cast<float*> (swap_rates_inh), reinterpret_cast<float*> (swap_rates_exc),
@@ -2088,7 +2088,7 @@ void SnnRepresentation::swap_groups_python(
 				reinterpret_cast<int*> (N_relative_G_indices), reinterpret_cast<int*> (G_neuron_typed_ccount),
 				reinterpret_cast<int*> (neuron_group_counts),
 				print_idx
-				
+
 	);
 }
 
@@ -2101,7 +2101,7 @@ __global__ void reset_N_rep_pre_synaptic_arrays(
 	int* N_rep_pre_synaptic_idcs,
 	int* N_rep_pre_synaptic_counts
 ){
-	const int src_N = blockIdx.x * blockDim.x + threadIdx.x; 
+	const int src_N = blockIdx.x * blockDim.x + threadIdx.x;
 	if (src_N < N){
 		for (int s = 0; s < S; s++){
 			Buffer[src_N + s * N] = -1;
@@ -2123,8 +2123,8 @@ __global__ void reset_N_rep_snk_counts(
 	const int N,
 	int* N_rep_pre_synaptic_counts
 ){
-	const int src_N = blockIdx.x * blockDim.x + threadIdx.x; 
-	
+	const int src_N = blockIdx.x * blockDim.x + threadIdx.x;
+
 	if (src_N < N){
 
 		if (src_N == 0){
@@ -2142,9 +2142,9 @@ __global__ void fill_N_rep_snk_counts(
 	int* N_rep,
 	int* N_rep_pre_synaptic_counts
 ){
-	const int src_N = blockIdx.x * blockDim.x + threadIdx.x; 
+	const int src_N = blockIdx.x * blockDim.x + threadIdx.x;
 	int snk_N;
-	
+
 	if (src_N < N){
 
 		for (int s = 0; s < S; s++){
@@ -2169,24 +2169,24 @@ __global__ void fill_unsorted_N_rep_pre_synaptic_idcs(
 	int* N_rep_pre_synaptic_counts
 ){
 
-	const int src_N = blockIdx.x * blockDim.x + threadIdx.x; 
+	const int src_N = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (src_N < N){
 
 		int snk_N;
 		int write_idx;
-	
+
 		int synapse_idx;
 
 		for (int s = 0; s < S; s++){
-			
+
 			synapse_idx = src_N + s * N;
 
 			snk_N = N_rep[synapse_idx];
 			write_idx = N_rep_pre_synaptic_counts[snk_N];
-			
+
 			while (synapse_idx != -1){
-				
+
 				synapse_idx = atomicExch(&N_rep_pre_synaptic_idcs[write_idx], synapse_idx);
 				SortBuffer[write_idx] = snk_N;
 				write_idx++;
@@ -2209,22 +2209,22 @@ __global__ void fill_N_rep_pre_synaptic(
 	int* N_rep_pre_synaptic_counts
 ){
 
-	const int src_N = blockIdx.x * blockDim.x + threadIdx.x; 
+	const int src_N = blockIdx.x * blockDim.x + threadIdx.x;
 
 	if (src_N < N){
 
 		int snk_N;
 		int write_idx;
-	
+
 		int synapse_idx;
 
 		for (int s = 0; s < S; s++){
-			
+
 			synapse_idx = src_N + s * N;
 
 			snk_N = N_rep[synapse_idx];
 			write_idx = N_rep_pre_synaptic_counts[snk_N];
-			
+
 			while (N_rep_pre_synaptic_idcs[write_idx] != synapse_idx){
 				write_idx++;
 			}
@@ -2261,10 +2261,10 @@ void sort_N_rep_sysnaptic(
 	}
 
 	while (n_sorted < N){
-			
+
 	 	if (n_sorted + N_batch_size > N){
 	 		N_batch_size = N - n_sorted;
-		} 
+		}
 
 		// printf("\nN_batch_size=%d", N_batch_size);
 
@@ -2274,12 +2274,12 @@ void sort_N_rep_sysnaptic(
 
 	 	thrust::stable_sort_by_key(N_rep_dp, N_rep_dp + S_batch_size, sort_keys_buffer_dp);
 	 	thrust::stable_sort_by_key(sort_keys_buffer_dp, sort_keys_buffer_dp + S_batch_size, N_rep_dp);
-		
+
 	 	n_sorted += N_batch_size;
 	 	sort_keys_buffer_dp += S_batch_size;
 	 	N_rep_dp += S_batch_size;
 
-	 	if (verbose) { 
+	 	if (verbose) {
 	 		std::cout << std::string(msg.length(),'\b');
 	 		msg = "sorted: " + std::to_string(n_sorted) + "/" + std::to_string(N);
 	 		std::cout << msg;
@@ -2338,7 +2338,7 @@ void SnnRepresentation::actualize_N_rep_pre_synaptic(){
 	reset_N_rep_snk_counts KERNEL_ARGS2(launch_pars.grid3, launch_pars.block3)(
 		N,
 		N_rep_pre_synaptic_counts
-	);	
+	);
 
 	checkCudaErrors(cudaDeviceSynchronize());
 
@@ -2397,7 +2397,7 @@ __global__ void remove_all_synapses_to_group_(
 	const int delete_synapse_value = -2
 ){
 	const int n = blockIdx.x * blockDim.x + threadIdx.x;
-	
+
 	if (n < N)
 	{
 		for (int s = 0; s < S; s++){
@@ -2406,7 +2406,7 @@ __global__ void remove_all_synapses_to_group_(
 			}
 		}
 
-		if (N_flags[n + N_flags_row_group * N] == group){		
+		if (N_flags[n + N_flags_row_group * N] == group){
 			int s_end2 = N_rep_pre_synaptic_counts[n + 1];
 			for (int s2 = N_rep_pre_synaptic_counts[n]; s2 < s_end2; s2++){
 				N_rep_pre_synaptic[N_rep_pre_synaptic_idcs[s2]] = -2;
@@ -2423,7 +2423,7 @@ void SnnRepresentation::remove_all_synapses_to_group(const int group){
 
 	remove_all_synapses_to_group_ KERNEL_ARGS2(launch_pars.grid3, launch_pars.block3)(
 		N, S,
-		N_flags, 
+		N_flags,
 		N_rep,
 		N_rep_pre_synaptic,
 		N_rep_pre_synaptic_idcs,
@@ -2447,7 +2447,7 @@ __global__ void nullify_all_weights_to_group_(
 	const int delete_synapse_value = -2
 ){
 	const int n = blockIdx.x * blockDim.x + threadIdx.x;
-	
+
 	if (n < N)
 	{
 		for (int s = 0; s < S; s++){
@@ -2467,7 +2467,7 @@ void SnnRepresentation::nullify_all_weights_to_group(const int group){
 
 	nullify_all_weights_to_group_ KERNEL_ARGS2(launch_pars.grid3, launch_pars.block3)(
 		N, S,
-		N_flags, 
+		N_flags,
 		N_rep,
 		N_weights,
 		group

@@ -76,6 +76,7 @@ RUN chmod 1777 /tmp && chmod 1777 /var/tmp && \
     apt-get install -y apt-utils sudo locales && \
     sudo echo "en_US.UTF-8 UTF-8" > /etc/locale.gen &&  \
     locale-gen en_US.UTF-8 && locale-gen en_US && sudo update-locale LC_ALL="en_US.UTF-8" && \
+    # sudo add-apt-repository ppa:ubuntu-toolchain-r/test && \
     apt-get install -y  \
       bash-completion  \
       ca-certificates \
@@ -101,6 +102,7 @@ RUN chmod 1777 /tmp && chmod 1777 /var/tmp && \
       wget \
       # for pycuda build dependencies
       build-essential libudev-dev libdrm-dev libsystemd-dev pkg-config && \
+    # sudo apt-get upgrade libstdc++6 && \
     # desktop
     mkdir /var/run/sshd &&  \
     sed -i 's/#*PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config && \

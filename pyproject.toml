@@ -93,6 +93,7 @@ numba                    = "^0.56"
 python                   = "^3.10"
 pyopengl                 = "^3.1"
 pyqt6                    = "^6.4"
+pyqtdarktheme            = "<=2.1.0"
 typer                    = "^0.7"
 vispy                    = "^0.12.1"
 
