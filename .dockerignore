@@ -1,26 +1,34 @@
 # NOTE: We're only including things that would already be checked in to the repo
 # So we're not including things like .tox -- that will never be committed
 # We're excluding docs and tests
-tests
+.git
+.github
+.mypy_cache
+.tyrannosaurus
+dist
 docs
 docker/docker_images_diagram.puml
+**/.cmake
+**/CMakeFiles
+**/.ipynb_checkpoints
+tests
+venv
+.coverage
+.dockerignore
+.editorconfig
+.gitignore
 
-.github
+
 .circleci
 .travis.yml
 .appveyor.yml
-.coverage
 .codeclimate.yml
 .coveralls.yml
-.dockerignore
 archive/readthedocs.yml
-.git
-.gitignore
 recipes
 azure-pipelines.yml
 archive/CONTRIBUTING.md
 archive/CHANGELOG.md
-.editorconfig
 archive/.pre-commit-config.yaml
 archive/SECURITY.md
 archive/.scrutinizer.yml

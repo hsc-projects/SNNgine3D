@@ -90,6 +90,7 @@ RUN su ${USER} && \
 
 RUN pip install --no-cache-dir torch==$TORCH_VERSION --extra-index-url https://download.pytorch.org/whl/cu116 && \
     # Clone PyCUDA (we need to enable Cuda-OpenGl-Interoperability before the installation)
+    cd "/home/${USER}/tmp/" && \
     git clone https://github.com/inducer/pycuda.git && cd pycuda && \
     git fetch --all --tags && git checkout tags/$PYCUDA_VERSION && \
     git submodule update --init && \
@@ -124,4 +125,4 @@ RUN wget -c "https://download-cf.jetbrains.com/python/pycharm-community-${PYCHAR
     ln -s "/opt/pycharm-community-${PYCHARM_COM_VERSION}/bin/pycharm.sh" /usr/bin/pycharm
 
 
-# docker run -d -p 4001:4000 --name nomachine0 --gpus all --cap-add=SYS_PTRACE snngine3d-nomachine
+# docker run -d -p 4001:4000 --name nomachine0 --gpus all --cap-add=SYS_PTRACE hscprojects/snngine3d-nomachine:main

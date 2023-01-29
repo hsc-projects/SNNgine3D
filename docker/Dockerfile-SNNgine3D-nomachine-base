@@ -111,6 +111,7 @@ RUN chmod 1777 /tmp && chmod 1777 /var/tmp && \
     rm -rf /var/lib/apt/lists/* && \
     curl -fSL "http://download.nomachine.com/download/${NOMACHINE_BUILD}/Linux/${NOMACHINE_PACKAGE_NAME}" -o nomachine.deb&&\
     dpkg -i nomachine.deb &&\
+    rm -f nomachine.dedb && \
     sed -i "s|#EnableClipboard both|EnableClipboard both |g" /usr/NX/etc/server.cfg && \
     sed -i '/DefaultDesktopCommand/c\DefaultDesktopCommand "/usr/bin/startxfce4"' /usr/NX/etc/node.cfg && \
     # update user directory
@@ -131,4 +132,4 @@ RUN chmod 1777 /tmp && chmod 1777 /var/tmp && \
 EXPOSE 22 4000
 ENTRYPOINT ["nxserver"]
 
-# docker run -d -p 4000:4000 --name nomachine-base0 --cap-add=SYS_PTRACE snngine3d-nomachine-base
+# docker run -d -p 4000:4000 --name nomachine-base0 --cap-add=SYS_PTRACE hscprojects/snngine3d-nomachine-base:main

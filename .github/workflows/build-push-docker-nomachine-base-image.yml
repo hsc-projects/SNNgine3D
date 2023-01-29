@@ -19,6 +19,7 @@ on:
     branches:
       - main
       - dev
+      - 'feature/**'
       - 'features/**'
 #    inputs:
 #      name:
@@ -66,8 +67,8 @@ jobs:
           tags: |
             type=ref,event=branch
 
-      - name: Setup Buildx
-        uses: docker/setup-buildx-action@v1
+#      - name: Setup Buildx
+#        uses: docker/setup-buildx-action@v1
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
@@ -77,8 +78,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+#          cache-from: type=gha
+#          cache-to: type=gha,mode=max
 
 #      - name: Trigger "Build and push snngine3d-nomachine" workflow
 #        run: |
