@@ -42,7 +42,7 @@ jobs:
           tox -v -c tests/ --root .
 
       - name: Setup Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v2
       - name: Build Docker image
         uses: docker/build-push-action@v3
         with:
