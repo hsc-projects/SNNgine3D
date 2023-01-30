@@ -15,10 +15,14 @@ from .windows import (
 from network.network_config import PlottingConfig
 from .base_engine_config import EngineConfig
 
+from vispy import gloo
+
 
 class Engine(Application):
 
     def __init__(self, config):
+
+        gloo.gl.use_gl('gl+')
 
         self.config: EngineConfig = config
 

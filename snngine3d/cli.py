@@ -17,14 +17,11 @@ permissions and limitations under the License.
 
 """
 
-from __future__ import annotations
-
 import logging
-import time
-
+import sys
 import typer
 
-from snngine3d import __title__, __version__, __copyright__, metadata
+from snngine3d import __title__, __version__, __copyright__
 
 
 logger = logging.getLogger(__package__)
@@ -32,29 +29,25 @@ cli = typer.Typer()
 
 
 @cli.command()
-def info(n_seconds: float = 0.01, verbose: bool = False) -> None:
+def run(config: str = '', verbose: bool = False) -> None:
     """
     Get info about SNNgine3D.
 
     Args:
-        n_seconds: Number of seconds to wait between processing.
+        config: Name or path to network config
         verbose: Output more info
 
     Example:
         To call this, run: ::
 
-            from testme import info
-            info(0.02)
+            snngine3d --config
     """
     typer.echo(f"{__title__} version {__version__}, {__copyright__}")
-    if verbose:
-        typer.echo(str(metadata.__dict__))
     total = 0
-    with typer.progressbar(range(100)) as progress:
-        for value in progress:
-            time.sleep(n_seconds)
-            total += 1
-    typer.echo(f"Processed {total} things.")
+    eng = Engine()
+    eng.load(config)
+    if sys.flags.interactive != 1:
+        eng.run()
 
 
 if __name__ == "__main__":
