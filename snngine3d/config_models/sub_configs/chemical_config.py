@@ -51,9 +51,9 @@ class ChemicalConfigCollection:
     def names(self) -> list[str]:
         return [x.name for x in self._elements]
 
-    def super_init(self, network_shape, scene, view, device):
-        super().__init__(network_shape, scene, view, device)
-        return self
+    # def super_init(self, network_shape, scene, view, device):
+    #     super().__init__(network_shape, scene, view, device)
+    #     return self
 
 
 @dataclass

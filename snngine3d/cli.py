@@ -20,8 +20,10 @@ permissions and limitations under the License.
 import logging
 import sys
 import typer
+# from typing import Optional
 
-from snngine3d import __title__, __version__, __copyright__
+# from main import launch_engine
+from snngine3d.engine import Engine
 
 
 logger = logging.getLogger(__package__)
@@ -29,12 +31,12 @@ cli = typer.Typer()
 
 
 @cli.command()
-def run(config: str = '', verbose: bool = False) -> None:
+def run(config_model: str = 'config_models.DefaultEngineConfig', verbose: bool = False) -> None:
     """
     Get info about SNNgine3D.
 
     Args:
-        config: Name or path to network config
+        config_model: Name or path to network config
         verbose: Output more info
 
     Example:
@@ -42,13 +44,31 @@ def run(config: str = '', verbose: bool = False) -> None:
 
             snngine3d --config
     """
-    typer.echo(f"{__title__} version {__version__}, {__copyright__}")
-    total = 0
-    eng = Engine()
-    eng.load(config)
+
+    try:
+        from snngine3d import __title__, __version__, __copyright__
+        typer.echo(f"{__title__} version {__version__}, {__copyright__}")
+
+        components = config_model.split('.')
+        config = __import__("snngine3d")
+
+        for comp in components:
+            config = getattr(config, comp)
+    except ImportError:
+        components = config_model.split('.')
+        config = __import__(components[0])
+
+        for comp in components[1:]:
+            config = getattr(config, comp)
+
+    typer.echo(f"\nInitializing Engine with {config_model}")
+
+    eng = Engine(config=config())
+
     if sys.flags.interactive != 1:
-        eng.run()
+        eng.run(allow_interactive=True)
 
 
 if __name__ == "__main__":
     cli()
+    # launch_engine()

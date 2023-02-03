@@ -46,7 +46,7 @@ except PackageNotFoundError:  # pragma: no cover
     logger.error(f"Could not load package metadata for {pkg}. Is it installed?")
 
 
-class Snnengine3DAssets:
+class SNNEngine3DAssets:
     """Utilities and resources for ${Project}."""
 
     @classmethod

@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from snngine3d.config_models import (
     NetworkInitValues,
     NetworkConfig,
-    PlottingConfig
+    PlottingConfig,
+    DefaultChemicals
 )
 
 
@@ -40,7 +41,8 @@ class EngineConfig:
                             N_pos_shape=(4, 4, 1),
                             sim_updates_per_frame=1,
                             stdp_active=True,
-                            debug=False, InitValues=InitValues())
+                            debug=False, InitValues=InitValues(),
+                            chemical_configs=DefaultChemicals())
     plotting = PlottingConfig(n_voltage_plots=10, voltage_plot_length=200,
                               n_scatter_plots=10, scatter_plot_length=200,
                               windowed_multi_neuron_plots=False,

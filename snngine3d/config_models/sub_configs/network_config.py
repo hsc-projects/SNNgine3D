@@ -1,10 +1,9 @@
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass
 import numpy as np
 from typing import Optional, Union
 
 import pandas as pd
 
-from .network_grid import NetworkGrid
 from snngine3d.utils import boxed_string
 from .chemical_config import ChemicalConfig, ChemicalConfigCollection, DefaultChemicals
 
@@ -68,8 +67,6 @@ class NetworkConfig:
 
     InitValues: NetworkInitValues = NetworkInitValues()
 
-    grid: Optional[NetworkGrid] = None
-
     chemical_configs: Optional[Union[list[ChemicalConfig],
                                      ChemicalConfig,
                                      ChemicalConfigCollection,
@@ -80,7 +77,7 @@ class NetworkConfig:
         msg = boxed_string(name)
         msg += f'\n\tN={self.N}, \n\tS={self.S}, \n\tD={self.D}, \n\tG={self.G},'
         msg += f'\n\tN_pos_shape={self.N_pos_shape},'
-        msg += f'\n\tgrid_segmentation={self.grid_segmentation}\n'
+        msg += f'\n\tgrid_segmentation={self.grid_segmentation}'
         return msg
 
     def __post_init__(self):
@@ -120,9 +117,6 @@ class NetworkConfig:
         assert self.vispy_scatter_plot_stride == 14  # enforced by the vispy scatterplot memory layout
 
         self.swap_tensor_shape_multiplicators: tuple = (self.S, 10)
-
-        if self.grid is None:
-            self.grid = NetworkGrid(self)
 
         if self.chemical_configs is not None:
             if not isinstance(self.chemical_configs, ChemicalConfigCollection):

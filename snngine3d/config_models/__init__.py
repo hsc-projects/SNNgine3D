@@ -1,7 +1,9 @@
-from .network_config import (
+from snngine3d.config_models.sub_configs import (
     NetworkConfig,
-    NetworkGrid,
-    NetworkInitValues
+    NetworkInitValues,
+    PlottingConfig,
+    ChemicalConfigCollection,
+    DefaultChemicals
 )
-from .plotting_config import PlottingConfig
 from .config import EngineConfig
+from .config import EngineConfig as DefaultEngineConfig
