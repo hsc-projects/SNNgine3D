@@ -1,10 +1,8 @@
 from PyQt6.QtWidgets import QApplication
 import qdarktheme
-import sys
-import typer
 from typing import Optional
 from vispy import gloo
-from vispy.app import Application, Timer
+from vispy.app import Application
 
 from snngine3d.config_models import EngineConfig
 from .windows import MainWindow
@@ -24,7 +22,6 @@ class Engine(Application):
 
         self.main_window: MainWindow = MainWindow(
             name="SNN Engine", app=self,
-            # plotting_config=self._plotting_config
         )
         self.main_window.show()
         if config is not None:
@@ -35,4 +32,4 @@ class Engine(Application):
         print(config.network.chemical_configs, '\n')
         print(config.plotting, '\n')
         self.config = config
-        self.main_window.add_plot_widgets(plotting_config=config.plotting)
+        self.main_window.add_plotting_config_dependent_widgets(plotting_config=config.plotting)

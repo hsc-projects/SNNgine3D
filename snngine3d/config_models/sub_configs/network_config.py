@@ -45,7 +45,7 @@ class NetworkConfig:
 
     vispy_scatter_plot_stride: int = 14  # enforced by the vispy scatterplot memory layout
 
-    grid_segmentation: tuple = None
+    location_group_segmentation: tuple = None
 
     N_G_n_cols: int = 2
     N_G_neuron_type_col: int = 0
@@ -77,7 +77,7 @@ class NetworkConfig:
         msg = boxed_string(name)
         msg += f'\n\tN={self.N}, \n\tS={self.S}, \n\tD={self.D}, \n\tG={self.G},'
         msg += f'\n\tN_pos_shape={self.N_pos_shape},'
-        msg += f'\n\tgrid_segmentation={self.grid_segmentation}'
+        msg += f'\n\tgrid_segmentation={self.location_group_segmentation}'
         return msg
 
     def __post_init__(self):
@@ -131,3 +131,22 @@ class NetworkConfig:
                 self.chemical_configs = ChemicalConfigCollection()
                 for chem in chemical_configs:
                     setattr(self.chemical_configs, chem.name, chem)
+
+        self.location_group_segmentation = self._segmentation(self.location_group_segmentation)
+
+        self.G = (self.location_group_segmentation[0]
+                  * self.location_group_segmentation[1]
+                  * self.location_group_segmentation[2])
+
+    def _segmentation(self, grid_segmentation):
+        if grid_segmentation is None:
+            segmentation_list = []
+            for s in self.N_pos_shape:
+                f = max(self.N_pos_shape) / min(self.N_pos_shape)
+                segmentation_list.append(
+                    int(int(max(self.D / (np.sqrt(3) * f), 2)) * (s / min(self.N_pos_shape))))
+            grid_segmentation = tuple(segmentation_list)
+        min_g_shape = min(grid_segmentation)
+        assert all([isinstance(s, int)
+                    and (s / min_g_shape == int(s / min_g_shape)) for s in grid_segmentation])
+        return grid_segmentation

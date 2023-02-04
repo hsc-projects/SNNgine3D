@@ -45,6 +45,11 @@ class EngineConfig:
                             chemical_configs=DefaultChemicals())
     plotting = PlottingConfig(n_voltage_plots=10, voltage_plot_length=200,
                               n_scatter_plots=10, scatter_plot_length=200,
+                              has_voltage_multiplot=True,
+                              has_firing_scatterplot=True,
+                              has_group_firings_multiplot=False,
+                              has_group_firings_plot0=True,
+                              has_group_firings_plot1=True,
                               windowed_multi_neuron_plots=False,
                               windowed_neuron_interfaces=False,
                               group_info_view_mode='split',

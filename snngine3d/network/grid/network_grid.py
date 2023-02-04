@@ -1,7 +1,7 @@
 # from dataclasses import dataclass
 import numpy as np
 
-from geometry import grid_coordinates, validate_pos, DirectedObject
+from snngine3d.geometry import grid_coordinates, validate_pos, DirectedObject
 # from .network_config import NetworkConfig
 
 
@@ -26,12 +26,12 @@ class NetworkGrid:
     def __init__(self, config):
 
         self.config = config
-        self.segmentation = self._segmentation(config.grid_segmentation)
-        self.config.G = self.segmentation[0] * self.segmentation[1] * self.segmentation[2]
+        self.segmentation = config.location_group_segmentation
 
         self.unit_shape = (float(self.config.N_pos_shape[0] / self.segmentation[0]),
                            float(self.config.N_pos_shape[1] / self.segmentation[1]),
                            float(self.config.N_pos_shape[2] / self.segmentation[2]))
+
         assert self.is_cube(self.unit_shape)
 
         self.movements = GridMovements(self.unit_shape)
@@ -85,20 +85,6 @@ class NetworkGrid:
     @staticmethod
     def is_cube(shape):
         return (shape[0] == shape[1]) and (shape[0] == shape[2])
-
-    def _segmentation(self, grid_segmentation):
-        if grid_segmentation is None:
-            segmentation_list = []
-            for s in self.config.N_pos_shape:
-                f = max(self.config.N_pos_shape) / min(self.config.N_pos_shape)
-                segmentation_list.append(
-                    int(int(max(self.config.D / (np.sqrt(3) * f), 2)) * (s / min(self.config.N_pos_shape))))
-            grid_segmentation = tuple(segmentation_list)
-        min_g_shape = min(grid_segmentation)
-        assert all([isinstance(s, int)
-                    and (s / min_g_shape == int(s / min_g_shape)) for s in grid_segmentation])
-        self.config.grid_segmentation = grid_segmentation
-        return grid_segmentation
 
     def _pos(self, max_z):
         groups = np.arange(self.config.G)

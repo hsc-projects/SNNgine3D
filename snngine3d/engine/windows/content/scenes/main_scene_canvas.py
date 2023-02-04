@@ -27,7 +27,6 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
     def __init__(self,
                  conf: CanvasConfig,
                  app,
-                 # plotting_config: PlottingConfig
                  ):
 
         super().__init__(conf, app)
@@ -70,38 +69,7 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
         self._height_max1 = 500
 
         self.table = TextTableWidget(labels=['t', 'update_duration'])
-        # self.info_grid_right(row=0, col=plot_col2 + 1, row_span=row_span_0, height_min=height_min0)
         self.grid.add_widget(self.table, 0, self._plot_col2+1)
-        # if plotting_config.windowed_multi_neuron_plots is False:
-        #     if plotting_config.has_voltage_multiplot is True:
-        #         self.voltage_plot = VoltagePlotWidget(plotting_confing=plotting_config,
-        #                                               width_max=600, height_min=height_min0)
-        #         self.grid.add_widget(self.voltage_plot, plot_row0, plot_col0, row_span=row_span_0, col_span=col_span0)
-        #     if plotting_config.has_firing_scatterplot is True:
-        #         self.scatter_plot = ScatterPlotWidget(plotting_confing=plotting_config,
-        #                                               width_max=600, height_max=height_max1)
-        #         self.grid.add_widget(self.scatter_plot, plot_row1, plot_col0, row_span=row_span10, col_span=col_span0)
-        #
-        # if plotting_config.group_info_view_mode.scene is True:
-        #     if plotting_config.has_group_firings_multiplot is True:
-        #         self.group_firings_multiplot = GroupFiringsPlotWidget(plotting_confing=plotting_config)
-        #         self.grid.add_widget(self.group_firings_multiplot, plot_row1, plot_col1,
-        #                              col_span=col_span0, row_span=row_span10)
-        #     self.color_bar = GroupInfoColorBar()
-        #     self.grid.add_widget(self.color_bar, plot_row1, plot_col0 + col_span0, row_span10, 1)
-        # if plotting_config.has_group_firings_plot0:
-        #     self.group_firings_plot_single0 = BasePlotWidget(
-        #         title="Group Firings 0:",
-        #         plot_height=1, plot_length=self.scatter_plot_length,
-        #         cam_yscale=1)
-        #     self.grid.add_widget(self.group_firings_plot_single0, plot_row1, plot_col2,
-        #                          col_span=col_span0, row_span=row_span_11)
-        # if plotting_config.has_group_firings_plot1:
-        #     self.group_firings_plot_single1 = BasePlotWidget(
-        #         title="Group Firings 1:",
-        #         plot_height=1, plot_length=self.scatter_plot_length)
-        #     self.grid.add_widget(self.group_firings_plot_single1, plot_row1 + row_span_11, plot_col2,
-        #                          col_span=2, row_span=row_span_11)
 
         self._clicked_obj = None
         self._selected_objects = []
@@ -116,7 +84,7 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
 
         self.freeze()
 
-    def add_plot_widgets(self, plotting_config):
+    def add_plot_widgets(self, plotting_config: PlottingConfig):
 
         self.n_voltage_plots = plotting_config.n_voltage_plots
         self.voltage_plot_length = plotting_config.voltage_plot_length

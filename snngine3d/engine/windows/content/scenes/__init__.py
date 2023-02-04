@@ -1,2 +1,3 @@
-from .main_scene_canvas import MainSceneCanvas
 from .canvas_config import CanvasConfig
+from .location_group_info_canvas import LocationGroupInfoCanvas
+from .main_scene_canvas import MainSceneCanvas
