@@ -20,6 +20,8 @@ class Engine(Application):
 
         self.config: Optional[EngineConfig] = None
 
+        self.native_app.setStyleSheet(qdarktheme.load_stylesheet())
+
         self.main_window: MainWindow = MainWindow(
             name="SNN Engine", app=self,
             # plotting_config=self._plotting_config
@@ -33,3 +35,4 @@ class Engine(Application):
         print(config.network.chemical_configs, '\n')
         print(config.plotting, '\n')
         self.config = config
+        self.main_window.add_plot_widgets(plotting_config=config.plotting)

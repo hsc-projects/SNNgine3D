@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow
 
 from snngine3d.utils import boxed_string
-from .widgets import ButtonMenuAction
+from .ui_widgets import ButtonMenuAction
 
 
 class AllButtonMenuActions:

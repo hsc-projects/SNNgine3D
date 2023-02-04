@@ -83,9 +83,23 @@ RUN su ${USER} && \
     pip install --no-cache-dir jupyter_contrib_nbextensions jupyter_nbextensions_configurator && \
     jupyter labextension install @ijmbarr/jupyterlab_spellchecker && \
     jupyter lab clean && \
-    conda init bash && \
     pip install --no-cache-dir jupyter_rfb "poetry==$POETRY_VERSION" && \
     mamba clean --all -f -y && \
+    echo "# >>> conda initialize >>>" >> /home/snn/.bashrc && \
+    echo "# !! Contents within this block are managed by 'conda init' !!" >> /home/snn/.bashrc && \
+    echo '__conda_setup="$("/opt/conda/bin/conda" "shell.bash" "hook" 2> /dev/null)"' >> /home/snn/.bashrc && \
+    echo "if [ $? -eq 0 ]; then" >> /home/snn/.bashrc && \
+    echo '    eval "$__conda_setup"' >> /home/snn/.bashrc && \
+    echo "else" >> /home/snn/.bashrc && \
+    echo '    if [ -f "/opt/conda/etc/profile.d/conda.sh" ]; then' >> /home/snn/.bashrc && \
+    echo '        . "/opt/conda/etc/profile.d/conda.sh"' >> /home/snn/.bashrc && \
+    echo "    else" >> /home/snn/.bashrc && \
+    echo '        export PATH="/opt/conda/bin:$PATH"' >> /home/snn/.bashrc && \
+    echo "    fi" >> /home/snn/.bashrc && \
+    echo "fi" >> /home/snn/.bashrc && \
+    echo "unset __conda_setup" >> /home/snn/.bashrc && \
+    echo "# <<< conda initialize <<<" >> /home/snn/.bashrc && \
+    echo "" >> /home/snn/.bashrc && \
     fix-permissions "/home/${USER}" && fix-permissions "${CONDA_DIR}"
 
 RUN pip install --no-cache-dir torch==$TORCH_VERSION --extra-index-url https://download.pytorch.org/whl/cu116 && \
@@ -104,6 +118,7 @@ RUN pip install --no-cache-dir torch==$TORCH_VERSION --extra-index-url https://d
 
 COPY ./poetry.lock ./pyproject.toml ./README.md $SNNGINE3D_DIR/
 COPY ./snngine3d $SNNGINE3D_DIR/snngine3d
+COPY ./snn_engine2 $SNNGINE3D_DIR/snn_engine2
 COPY --chown="${UID}:${GID}" /notebooks "/home/${USER}/notebooks"
 #COPY --chown="${UID}:${GID}" /examples "/home/${USER}/examples"
 

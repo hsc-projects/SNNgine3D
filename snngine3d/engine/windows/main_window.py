@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
     QStatusBar
 )
 
-# from vispy.app import Application
+from vispy.app import Application
 #
 # from engine.content.scenes import (
 #     MainSceneCanvas,
@@ -21,22 +21,23 @@ from PyQt6.QtWidgets import (
 from .base_window import BaseWindow
 from .content import (
     AllButtonMenuActions,
-    # CanvasConfig,
+    CanvasConfig,
     # MainUILeft,
+    MainSceneCanvas,
     MenuBar,
     # ButtonMenuActions,
     # GroupInfoPanel,
     # SceneCanvasFrame,
     # NeuronInterfacePanel
 )
-# from network import PlottingConfig
+from snngine3d.config_models import PlottingConfig
 
 
 class MainWindow(BaseWindow):
 
     def __init__(self,
                  name: str,
-                 app,  # : Optional[Application],
+                 app: Optional[Application],
                  # plotting_config: PlottingConfig,
                  keys=None
                  ):
@@ -49,14 +50,16 @@ class MainWindow(BaseWindow):
                 raise AttributeError(f'\'{attr}\' ')
 
         self.ui_elements = AllButtonMenuActions(self)
-        self.menubar = MenuBar(self)
+        self.menubar = MenuBar(self, self.ui_elements)
 
         # self.ui_panel_left = MainUILeft(self, plotting_config)
 
         self.setMenuBar(self.menubar)
         self.setStatusBar(QStatusBar(self))
-        # self.scene_3d = MainSceneCanvas(
-        #     conf=CanvasConfig(keys=keys), app=app, plotting_config=plotting_config)
+        self.scene_3d = MainSceneCanvas(
+            conf=CanvasConfig(keys=keys), app=app,
+            # plotting_config=plotting_config
+        )
         # if plotting_config.group_info_view_mode.split is True:
         #     self.group_info_scene = LocationGroupInfoCanvas(
         #         conf=CanvasConfig(keys=keys), app=app, plotting_config=plotting_config)
@@ -66,7 +69,7 @@ class MainWindow(BaseWindow):
 
         self.splitter = QSplitter(QtCore.Qt.Orientation.Horizontal)
         # self.splitter.addWidget(self.ui_panel_left)
-        # self.splitter.addWidget(SceneCanvasFrame(self, self.scene_3d))
+        self.splitter.addWidget(self.scene_3d.frame(parent=self))
         self.splitter.setStretchFactor(0, 16)
         self.splitter.setStretchFactor(1, 3)
 
@@ -78,6 +81,9 @@ class MainWindow(BaseWindow):
 
         hbox = QHBoxLayout(self.centralWidget())
         hbox.addWidget(self.splitter)
+
+    def add_plot_widgets(self, plotting_config: PlottingConfig):
+        self.scene_3d.add_plot_widgets(plotting_config=plotting_config)
 
     # def add_group_info_scene_to_splitter(self, plotting_config):
     #     if plotting_config.group_info_view_mode.split is True:
