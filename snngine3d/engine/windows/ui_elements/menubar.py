@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import (
     QMenuBar,
 )
 
-from .all_button_menu_actions import AllButtonMenuActions
+from snngine3d.engine.widgets.all_button_menu_actions import AllButtonMenuActions
 
 
 class MenuBar(QMenuBar):
@@ -19,7 +19,6 @@ class MenuBar(QMenuBar):
             self.exit: QAction = actions.EXIT_APP.action()
 
             self.add_selector_box: QAction = actions.ADD_SELECTOR_BOX.action()
-            self.add_synapsevisual: QAction = actions.ADD_SYNAPSEVISUAL.action()
 
             self.toggle_groups_ids: QAction = actions.TOGGLE_GROUP_IDS_TEXT.action()
             self.toggle_g_flags: QAction = actions.TOGGLE_G_FLAGS_TEXT.action()
@@ -45,7 +44,7 @@ class MenuBar(QMenuBar):
 
         self.objects_menu = self.addMenu('&Objects')
         self.objects_menu.addAction(self.actions.add_selector_box)
-        self.objects_menu.addAction(self.actions.add_synapsevisual)
+        # self.objects_menu.addAction(self.actions.add_synapsevisual)
 
         self.view_menu = self.addMenu('&View')
         self.view_menu.addAction(self.actions.toggle_outergrid)

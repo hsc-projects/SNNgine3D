@@ -1,1 +1,0 @@
-from .collapsible_widget import CollapsibleWidget

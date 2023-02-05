@@ -1,11 +1,11 @@
-from snngine3d.engine.windows.content.ui_widgets import (
-    CollapsibleWidget,
+from snngine3d.engine.widgets import (
+    AllButtonMenuActions,
     ComboBoxFrame,
     G2GInfoDualComboBoxFrame
 )
 
 from .base_panel import BasePanel
-from snngine3d.engine.windows.content.all_button_menu_actions import AllButtonMenuActions
+from snngine3d.engine.widgets.collapsibles import CollapsibleWidget
 
 
 class LocationGroupInfoPanel(BasePanel):

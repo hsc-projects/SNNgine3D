@@ -8,9 +8,26 @@ from PyQt6.QtWidgets import QSlider, QDoubleSpinBox, QStyleOptionSpinBox, QStyle
     QLabel, QFrame
 
 from .base_gui_element import BaseGUIElement
-from interfaces import NeuronInterface
-from network.network_state import LocationGroupProperties
-from rendering import Scale, Translate
+# from snngine3d.interfaces import NeuronInterface
+# from network.network_state import LocationGroupProperties
+# from rendering import Scale, Translate
+
+
+# TODO: remove
+class NeuronInterface:
+    pass
+
+
+class Scale:
+    pass
+
+
+class Translate:
+    pass
+
+
+class LocationGroupProperties:
+    pass
 
 
 class CustomQSlider(QSlider):
@@ -330,15 +347,6 @@ class SpinBoxSlider(BaseGUIElement):
         # print(v)
         self.spin_box.setValue(v)
         self.set_slider_value(v)
-
-
-class SubCollapsibleFrame(QFrame):
-
-    def __init__(self, parent, fixed_width=450):
-        super().__init__(parent)
-        self.setFixedWidth(fixed_width)
-        self.setLayout(QHBoxLayout(self))
-        self.layout().setContentsMargins(15, 0, 0, 0)
 
 
 class SliderCollectionWidget(QWidget):

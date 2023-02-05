@@ -1,11 +1,19 @@
 __author__ = 'Caroline Beyne'
 
-from PyQt6 import QtGui, QtCore, QtWidgets
+from PyQt6 import QtGui, QtCore
+from PyQt6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QVBoxLayout,
+    QWidget
+)
 
 
-class CollapsibleWidget(QtWidgets.QWidget):
+class CollapsibleWidget(QWidget):
 
-    class Arrow(QtWidgets.QFrame):
+    class Arrow(QFrame):
         def __init__(self, parent=None, collapsed=False):
             super().__init__(parent=parent)
             self.setFixedSize(24, 24)
@@ -37,7 +45,7 @@ class CollapsibleWidget(QtWidgets.QWidget):
             painter.drawPolygon(*self._arrow)
             painter.end()
 
-    class TitleFrame(QtWidgets.QFrame):
+    class TitleFrame(QFrame):
         def __init__(self, body, parent=None, title="", collapsed=False, min_collapsed_height=28):
             super().__init__(parent=parent)
 
@@ -45,14 +53,14 @@ class CollapsibleWidget(QtWidgets.QWidget):
             self.move(QtCore.QPoint(20, 0))
             self.setStyleSheet("border:1px solid rgb(71, 71, 71); ")
 
-            self.setLayout(QtWidgets.QHBoxLayout(self))
+            self.setLayout(QHBoxLayout(self))
             self.layout().setContentsMargins(0, 0, 0, 0)
             # self._hlayout.setSpacing(0)
 
             self._arrow = CollapsibleWidget.Arrow(collapsed=collapsed)
             self._arrow.setStyleSheet("border:0px")
 
-            self._title = QtWidgets.QLabel(title)
+            self._title = QLabel(title)
             self._title.setFixedHeight(24)
             # self._title.setMaximumHeight(24)
             self._title.move(QtCore.QPoint(20, 0))
@@ -76,14 +84,14 @@ class CollapsibleWidget(QtWidgets.QWidget):
         self._is_collapsed = True
         self._title_frame = self.TitleFrame(self, title=title, collapsed=self._is_collapsed)
 
-        self._content = QtWidgets.QWidget()
-        self._content_layout = QtWidgets.QVBoxLayout()
+        self._content = QWidget()
+        self._content_layout = QVBoxLayout()
         self._content_layout.setContentsMargins(5, 0, 0, 0)
         self._content.setFixedHeight(0)
         self._content_layout.setSpacing(spacing)
         self._content.setLayout(self._content_layout)
         self._content.setVisible(not self._is_collapsed)
-        self._main_v_layout = QtWidgets.QVBoxLayout(self)
+        self._main_v_layout = QVBoxLayout(self)
         self._main_v_layout.addWidget(self._title_frame)
         self._main_v_layout.addWidget(self._content)
         self._main_v_layout.setContentsMargins(0, 0, 0, 0)
@@ -93,7 +101,7 @@ class CollapsibleWidget(QtWidgets.QWidget):
         self.parent_collapsible = None
         self.children_collapsibles = []
         sp = self.sizePolicy()
-        sp.setHorizontalPolicy(QtWidgets.QSizePolicy.Policy.Expanding)
+        sp.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
         self.setSizePolicy(sp)
 
     def children_height(self):
@@ -137,7 +145,7 @@ class CollapsibleWidget(QtWidgets.QWidget):
     def add(self, o):
         add = 0
         self._content.setFixedHeight(self._content.height() + o.height() + add)
-        # print('content-height:', self._content.height())
+        # print('ui_elements-height:', self._content.height())
         self._content_layout.addWidget(o)
         if isinstance(o, CollapsibleWidget):
             # self._content.setFixedHeight(self._content.height() + 3)
@@ -148,3 +156,13 @@ class CollapsibleWidget(QtWidgets.QWidget):
             o.toggle_collapsed()
             self.toggle_collapsed()
             self.toggle_collapsed()
+
+
+class SubCollapsibleFrame(QFrame):
+
+    def __init__(self, parent, fixed_width=450):
+        super().__init__(parent)
+        self.setFixedWidth(fixed_width)
+        self.setLayout(QHBoxLayout(self))
+        self.layout().setContentsMargins(15, 0, 0, 0)
+

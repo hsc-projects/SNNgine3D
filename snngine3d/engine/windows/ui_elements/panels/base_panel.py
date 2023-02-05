@@ -21,3 +21,8 @@ class BasePanel(QScrollArea):
     # noinspection PyPep8Naming
     def addWidget(self, *args):
         self.widget().layout().addWidget(*args)
+
+    # noinspection PyPep8Naming
+    def insertWidget(self, *args):
+        # noinspection PyUnresolvedReferences
+        self.widget().layout().insertWidget(*args)

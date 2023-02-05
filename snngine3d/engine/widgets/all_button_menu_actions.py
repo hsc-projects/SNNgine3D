@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QMainWindow
 
 from snngine3d.utils import boxed_string
-from .ui_widgets import ButtonMenuAction
+from snngine3d.engine.widgets import ButtonMenuAction
 
 
 class AllButtonMenuActions:
@@ -45,12 +45,6 @@ class AllButtonMenuActions:
             menu_name='&Add SelectorBox',
             name='Add SelectorBox',
             status_tip='Add SelectorBox',
-            window=self.window)
-
-        self.ADD_SYNAPSEVISUAL: ButtonMenuAction = ButtonMenuAction(
-            menu_name='&Add SynapseVisual',
-            name='Add SynapseVisual',
-            status_tip='Add SynapseVisual',
             window=self.window)
 
         self.ACTUALIZE_G_FLAGS_TEXT: ButtonMenuAction = ButtonMenuAction(

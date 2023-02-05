@@ -2,7 +2,7 @@ from dataclasses import asdict
 from PyQt6.QtWidgets import QFrame, QVBoxLayout
 from vispy.scene import SceneCanvas
 
-from snngine3d.engine.windows.content.scenes.canvas_config import CanvasConfig
+from snngine3d.engine.windows.ui_elements.scenes.canvas_config import CanvasConfig
 
 
 class SceneCanvasFrame(QFrame):

@@ -10,8 +10,8 @@ from PyQt6.QtWidgets import (
 from vispy.app import Application
 
 from .base_window import BaseWindow
-from .content import (
-    AllButtonMenuActions,
+from snngine3d.engine.widgets import AllButtonMenuActions
+from .ui_elements import (
     CanvasConfig,
     LocationGroupInfoCanvas,
     LocationGroupInfoPanel,
@@ -43,6 +43,8 @@ class MainWindow(BaseWindow):
 
         self.left_panel = MainWindowPanelLeft(self, self.all_button_menu_actions)
 
+        self.menubar.addAction(self.left_panel.synapse_collapsible.add_synapse_visual_button.action())
+
         self.setMenuBar(self.menubar)
         self.setStatusBar(QStatusBar(self))
         self.scene_3d = MainSceneCanvas(
@@ -61,7 +63,11 @@ class MainWindow(BaseWindow):
         hbox.addWidget(self.splitter)
 
     def add_plotting_config_dependent_widgets(self, plotting_config: PlottingConfig):
+
         self.scene_3d.add_plot_widgets(plotting_config=plotting_config)
+
+        self.left_panel.add_plotting_config_dependent_widgets(plotting_config=plotting_config)
+
         if plotting_config.group_info_view_mode.split is True:
 
             self.group_info_scene = LocationGroupInfoCanvas(
@@ -79,3 +85,4 @@ class MainWindow(BaseWindow):
         if plotting_config.group_info_view_mode.scene is True:
             self.splitter.addWidget(self.right_panel)
             self.splitter.setStretchFactor(2, 10)
+
