@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import (
 
 from vispy.app import Application
 
-from .base_window import BaseWindow
+from snngine3d.engine.windows.ui_elements.base_window import BaseWindow
 from snngine3d.engine.widgets import AllButtonMenuActions
 from .ui_elements import (
     CanvasConfig,
@@ -43,7 +43,7 @@ class MainWindow(BaseWindow):
 
         self.left_panel = MainWindowPanelLeft(self, self.all_button_menu_actions)
 
-        self.menubar.addAction(self.left_panel.synapse_collapsible.add_synapse_visual_button.action())
+        self.menubar.addAction(self.left_panel.synapse_collapsible.ADD_SYNAPSE_VISUAL.action())
 
         self.setMenuBar(self.menubar)
         self.setStatusBar(QStatusBar(self))

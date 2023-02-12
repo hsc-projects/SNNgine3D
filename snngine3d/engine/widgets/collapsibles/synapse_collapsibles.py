@@ -79,12 +79,12 @@ class SynapseCollapsibleContainer(CollapsibleWidget):
     def __init__(self, window: QMainWindow, title='Visualized Synapses', parent=None):
         CollapsibleWidget.__init__(self, title=title, parent=parent)
 
-        self.add_synapse_visual_button: ButtonMenuAction = ButtonMenuAction(
+        self.ADD_SYNAPSE_VISUAL: ButtonMenuAction = ButtonMenuAction(
             menu_name='&Add SynapseVisual',
             name='Add SynapseVisual',
             status_tip='Add SynapseVisual',
             window=window)
-        self.add(self.add_synapse_visual_button.button())
+        self.add(self.ADD_SYNAPSE_VISUAL.button())
         self.interfaced_synapses_dct = {}
 
     def add_interfaced_synapse(self, network: SpikingNeuralNetwork, neuron_id: int, title=None):

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class XYZ:
+class XYZObject:
     x: object = None
     y: object = None
     z: object = None

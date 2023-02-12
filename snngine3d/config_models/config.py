@@ -30,14 +30,12 @@ class EngineConfig:
             Exc2Exc: float = .75
             SensorySource: float = 1.5
 
-    N: int = 25 * 10 ** 3
-    T: int = 5000  # Max simulation record duration
-
     device: int = 0
 
     max_batch_size_mb: int = 300
 
-    network = NetworkConfig(N=N,
+    network = NetworkConfig(N=25 * 10 ** 3,
+                            T=5000,
                             N_pos_shape=(4, 4, 1),
                             sim_updates_per_frame=1,
                             stdp_active=True,
@@ -57,3 +55,5 @@ class EngineConfig:
 
     # network_class: Type[SpikingNeuralNetwork] = None
     update_single_neuron_plots: bool = False
+
+    screen: int = 0

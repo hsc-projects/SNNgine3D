@@ -5,7 +5,10 @@ from .neuron_collapsibles import (
     NeuronIDFrame,
     SingleNeuronCollapsible,
 )
-from .rendered_object_collapsibles import RenderedObjectCollectionCollapsible
+from .rendered_object_collapsibles import (
+    RenderedObjectCollapsible,
+    RenderedObjectCollectionCollapsible
+)
 from .sensory_input_collapsible import SensoryInputCollapsible
 from .synapse_collapsibles import SynapticWeightsCollapsible, SynapseCollapsibleContainer
 from .thalamic_input_collapsible import ThalamicInputCollapsible

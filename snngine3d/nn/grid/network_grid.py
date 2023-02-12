@@ -1,11 +1,11 @@
 # from dataclasses import dataclass
 import numpy as np
 
-from snngine3d.geometry import grid_coordinates, validate_pos, DirectedObject
+from snngine3d.geometry.grid import grid_coordinates, validate_pos, GridDirectionsObject
 # from .network_config import NetworkConfig
 
 
-class GridMovements(DirectedObject):
+class GridMovements(GridDirectionsObject):
 
     def __init__(self, unit_shape):
         obj = np.zeros((6, 3))

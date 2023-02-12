@@ -8,7 +8,6 @@ from vispy.util import keys
 
 # from network import SpikingNeuralNetwork
 # from rendering import RenderedObject
-from snngine3d.config_models import PlottingConfig
 from .widgets import (
     BaseEngineSceneCanvas,
     BasePlotWidget,
@@ -19,6 +18,9 @@ from .widgets import (
     VoltagePlotWidget,
 )
 from .canvas_config import CanvasConfig
+
+from snngine3d.config_models import PlottingConfig
+from snngine3d.vispy_torch_interop import RenderedObject
 
 
 class MainSceneCanvas(BaseEngineSceneCanvas):
@@ -82,6 +84,8 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
 
         self.grid_transform = self.scene.node_transform(self.grid)
 
+        self.network = None
+
         self.freeze()
 
     def add_plot_widgets(self, plotting_config: PlottingConfig):
@@ -125,11 +129,6 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
             self.grid.add_widget(self.group_firings_plot_single1, self._plot_row1 + self._row_span_11, self._plot_col2,
                                  col_span=2, row_span=self._row_span_11)
 
-    @property
-    def _window_id(self):
-        # noinspection PyProtectedMember
-        return self._backend._id
-
     def set_keys(self, keys_):
         self.unfreeze()
         # noinspection PyProtectedMember
@@ -139,86 +138,87 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
     def mouse_pos(self, event):
         return self.grid_transform.map(event.pos)[:2]
 
-    # def _select_clicked_obj(self):
-    #
-    #     if self._clicked_obj is not self._last_selected_obj:
-    #
-    #         self.network.neurons._neuron_visual.face_color[:, 3] = 0.05
-    #         self.network.neurons._neuron_visual.edge_color[:, 3] = 0.05
-    #         self.network.neurons._neuron_visual.set_gl_state(depth_test=False)
-    #
-    #         for o in copy(self._selected_objects):
-    #             if ((not (o is self._clicked_obj))
-    #                     and ((self._clicked_obj is None) or (not o.is_select_child(self._clicked_obj)))):
-    #                 self._select(o, False)
-    #
-    #         if isinstance(self._clicked_obj, RenderedObject):
-    #             if self._clicked_obj.selected:
-    #                 # self.clicked_obj.on_select_callback(self.clicked_obj.selected)
-    #                 self._clicked_obj.update()
-    #                 self._last_selected_obj = self._clicked_obj
-    #             else:
-    #                 # print('\nSELECTED:', self._clicked_obj)
-    #                 self._select(self._clicked_obj, True)
+    def _select_clicked_obj(self):
 
-    # def on_mouse_press(self, event):
-    #
-    #     if event.button == 1:
-    #         self.network_view.camera.interactive = False
-    #         self.network_view.interactive = False
-    #         self._clicked_obj = self.visual_at(event.pos)
-    #         # print('\nCLICKED:', self._clicked_obj)
-    #         self.network_view.interactive = True
-    #         self._click_pos[:2] = self.mouse_pos(event)
-    #
-    #         if isinstance(self._clicked_obj, RenderedObject) and self._clicked_obj.draggable:
-    #             self._select_clicked_obj()
-    #
-    # def _mouse_moved(self, event):
-    #     self._last_mouse_pos[:2] = self.mouse_pos(event)
-    #     return (self._last_mouse_pos[:2] - self._click_pos[:2]).any()
-    #
-    # def _select(self, obj: RenderedObject, v: bool):
-    #     obj.select(v)
-    #     if v is True:
-    #         self._selected_objects.append(obj)
-    #         self._last_selected_obj = obj
-    #     else:
-    #         self._selected_objects.remove(obj)
-    #         if obj is self._last_selected_obj:
-    #             self._last_selected_obj = None
-    #     return obj
-    #
-    # def on_mouse_release(self, event):
-    #     self.network_view.camera.interactive = True
-    #     if event.button == 1:
-    #         if (not self._mouse_moved(event)) or (self._clicked_obj is self.visual_at(event.pos)):
-    #             self._select_clicked_obj()
-    #         if isinstance(self._last_selected_obj, RenderedObject) and self._last_selected_obj.draggable:
-    #             self._select(self._last_selected_obj, False).update()
-    #             self._last_selected_obj = self._selected_objects[-1]
-    #         # self._last_selected_obj = None
-    #
-    #         print(f'currently selected ({len(self._selected_objects)}):', self._selected_objects)
-    #         if len(self._selected_objects) == 0:
-    #             self.network.neurons._neuron_visual.face_color[:, 3] = 0.3
-    #             self.network.neurons._neuron_visual.edge_color[:, 3] = 0.5
-    #             self.network.neurons._neuron_visual.set_gl_state(depth_test=True)
-    #
-    # def on_mouse_move(self, event):
-    #     self.network_view.camera.interactive = True
-    #     if event.button == 1:
-    #         if isinstance(self._clicked_obj, RenderedObject) and self._clicked_obj.draggable:
-    #             # print(keys.SHIFT in event.modifiers)
-    #             self.network_view.camera.interactive = False
-    #             self._last_mouse_pos[:2] = self.mouse_pos(event)
-    #             # dist = np.linalg.norm(self._last_mouse_pos - self._click_pos)
-    #             diff = self._last_mouse_pos - self._click_pos
-    #             # print('diff:', diff)
-    #             if keys.SHIFT in event.modifiers:
-    #                 mode = 0
-    #             elif keys.CONTROL in event.modifiers:
-    #                 mode = 1
-    #             else:
-    #                 mode = 2
-    #             self._clicked_obj.on_drag_callback(diff/100, mode=mode)
+        if self._clicked_obj is not self._last_selected_obj:
+            # TODO: uncomment
+            # self.network.neurons._neuron_visual.face_color[:, 3] = 0.05
+            # self.network.neurons._neuron_visual.edge_color[:, 3] = 0.05
+            # self.network.neurons._neuron_visual.set_gl_state(depth_test=False)
+
+            for o in copy(self._selected_objects):
+                if ((not (o is self._clicked_obj))
+                        and ((self._clicked_obj is None) or (not o.is_select_child(self._clicked_obj)))):
+                    self._select(o, False)
+
+            if isinstance(self._clicked_obj, RenderedObject):
+                if self._clicked_obj.selected:
+                    # self.clicked_obj.on_select_callback(self.clicked_obj.selected)
+                    self._clicked_obj.update()
+                    self._last_selected_obj = self._clicked_obj
+                else:
+                    # print('\nSELECTED:', self._clicked_obj)
+                    self._select(self._clicked_obj, True)
+
+    def on_mouse_press(self, event):
+
+        if event.button == 1:
+            self.network_view.camera.interactive = False
+            self.network_view.interactive = False
+            self._clicked_obj = self.visual_at(event.pos)
+            # print('\nCLICKED:', self._clicked_obj)
+            self.network_view.interactive = True
+            self._click_pos[:2] = self.mouse_pos(event)
+
+            if isinstance(self._clicked_obj, RenderedObject) and self._clicked_obj.draggable:
+                self._select_clicked_obj()
+
+    def _mouse_moved(self, event):
+        self._last_mouse_pos[:2] = self.mouse_pos(event)
+        return (self._last_mouse_pos[:2] - self._click_pos[:2]).any()
+
+    def _select(self, obj: RenderedObject, v: bool):
+        obj.select(v)
+        if v is True:
+            self._selected_objects.append(obj)
+            self._last_selected_obj = obj
+        else:
+            self._selected_objects.remove(obj)
+            if obj is self._last_selected_obj:
+                self._last_selected_obj = None
+        return obj
+
+    def on_mouse_release(self, event):
+        self.network_view.camera.interactive = True
+        if event.button == 1:
+            if (not self._mouse_moved(event)) or (self._clicked_obj is self.visual_at(event.pos)):
+                self._select_clicked_obj()
+            if isinstance(self._last_selected_obj, RenderedObject) and self._last_selected_obj.draggable:
+                self._select(self._last_selected_obj, False).update()
+                self._last_selected_obj = self._selected_objects[-1]
+            # self._last_selected_obj = None
+
+            print(f'currently selected ({len(self._selected_objects)}):', self._selected_objects)
+            # TODO: uncomment
+            # if len(self._selected_objects) == 0:
+            #     self.network.neurons._neuron_visual.face_color[:, 3] = 0.3
+            #     self.network.neurons._neuron_visual.edge_color[:, 3] = 0.5
+            #     self.network.neurons._neuron_visual.set_gl_state(depth_test=True)
+
+    def on_mouse_move(self, event):
+        self.network_view.camera.interactive = True
+        if event.button == 1:
+            if isinstance(self._clicked_obj, RenderedObject) and self._clicked_obj.draggable:
+                # print(keys.SHIFT in event.modifiers)
+                self.network_view.camera.interactive = False
+                self._last_mouse_pos[:2] = self.mouse_pos(event)
+                # dist = np.linalg.norm(self._last_mouse_pos - self._click_pos)
+                diff = self._last_mouse_pos - self._click_pos
+                # print('diff:', diff)
+                if keys.SHIFT in event.modifiers:
+                    mode = 0
+                elif keys.CONTROL in event.modifiers:
+                    mode = 1
+                else:
+                    mode = 2
+                self._clicked_obj.on_drag_callback(diff/100, mode=mode)

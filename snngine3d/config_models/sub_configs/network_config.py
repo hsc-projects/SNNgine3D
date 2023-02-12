@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 import pandas as pd
 
-from snngine3d.utils import boxed_string
+from snngine3d.config_models.utils import boxed_string
 from .chemical_config import ChemicalConfig, ChemicalConfigCollection, DefaultChemicals
 
 
@@ -39,6 +39,7 @@ class NetworkConfig:
     S: Optional[int] = None
     D: Optional[int] = None
     G: Optional[int] = None
+    T: int = 5000  # Max simulation record duration
 
     pos: np.array = None
     N_pos_shape: tuple = (1, 1, 1)

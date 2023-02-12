@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (
 from snngine3d.engine.widgets.collapsibles import (
     ChemicalControlCollapsibleContainer,
     MainWindowNeuronsCollapsible,
+    RenderedObjectCollapsible,
     RenderedObjectCollectionCollapsible,
     SensoryInputCollapsible,
     SynapticWeightsCollapsible,
@@ -83,4 +84,10 @@ class MainWindowPanelLeft(BasePanel):
             self.neurons_collapsible = MainWindowNeuronsCollapsible(parent=self)
         if plotting_config.windowed_neuron_interfaces is False:
             self.insertWidget(2, self.neurons_collapsible)
+
+    def add_3d_object_sliders(self, obj):
+        collapsible = RenderedObjectCollapsible(obj, self.window, self)
+        self.rendered_objects_collapsible.add(collapsible)
+        return collapsible
+
 
