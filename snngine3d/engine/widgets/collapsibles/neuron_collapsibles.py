@@ -376,7 +376,7 @@ class SingleNeuronCollapsibleContainer:
         # neuron1.neuron_interface.current_injection_function = neuron0.neuron_interface.current_injection_function
 
 
-class MainWindowNeuronsCollapsible(CollapsibleWidget, SingleNeuronCollapsibleContainer):
+class MainWindowNeuronCollectionCollapsible(CollapsibleWidget, SingleNeuronCollapsibleContainer):
 
     def __init__(self, title='Neurons', parent=None):
 

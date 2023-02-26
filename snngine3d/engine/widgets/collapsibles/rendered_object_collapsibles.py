@@ -3,15 +3,9 @@ from typing import Optional
 from PyQt6 import QtCore
 from PyQt6.QtWidgets import QLabel, QMainWindow, QVBoxLayout, QWidget
 
-# from rendering import RenderedObjectNode
-
 from .base_collapsible_widget import CollapsibleWidget, SubCollapsibleFrame
 from snngine3d.engine.widgets import SpinBoxSlider
-
-
-# TODO: remove
-class RenderedObjectNode:
-    pass
+from snngine3d.vispy_torch_interop import RenderedObjectNode
 
 
 class RenderedObjectPropertyFrame(SubCollapsibleFrame):
@@ -82,6 +76,6 @@ class RenderedObjectCollectionCollapsible(CollapsibleWidget):
         super().__init__(parent=parent, title='Objects')
 
     def add_object(self, obj):
-        collapsible = RenderedObjectCollapsible(obj, self.window, self)
+        collapsible = RenderedObjectCollapsible(obj, self.window(), self)
         self.add(collapsible)
         return collapsible

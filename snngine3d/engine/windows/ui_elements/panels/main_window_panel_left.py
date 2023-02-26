@@ -6,13 +6,14 @@ from PyQt6.QtWidgets import (
 )
 
 from snngine3d.engine.widgets.collapsibles import (
-    ChemicalControlCollapsibleContainer,
-    MainWindowNeuronsCollapsible,
+    CameraCollectionCollapsible,
+    ChemicalControlsCollapsible,
+    MainWindowNeuronCollectionCollapsible,
     RenderedObjectCollapsible,
     RenderedObjectCollectionCollapsible,
     SensoryInputCollapsible,
     SynapticWeightsCollapsible,
-    SynapseCollapsibleContainer,
+    SynapseCollectionCollapsible,
     ThalamicInputCollapsible
 )
 # from network import SpikingNeuralNetwork
@@ -56,13 +57,14 @@ class MainWindowPanelLeft(BasePanel):
         self.buttons = self.Buttons(buttons=buttons, parent=self)
 
         self.neurons_collapsible = None
-        self.chemicals_collapsible = ChemicalControlCollapsibleContainer(parent=self)
-        self.synapse_collapsible = SynapseCollapsibleContainer(parent=self, window=window)
+        self.chemicals_collapsible = ChemicalControlsCollapsible(parent=self)
+        self.synapse_collapsible = SynapseCollectionCollapsible(parent=self, window=window)
         self.sensory_input_collapsible = SensoryInputCollapsible(parent=self, window=window)
         self.thalamic_input_collapsible = ThalamicInputCollapsible(parent=self, window=window)
 
         self.weights_collapsible = SynapticWeightsCollapsible(self, window=window)
 
+        self.cameras_collapsible = CameraCollectionCollapsible(self)
         self.rendered_objects_collapsible = RenderedObjectCollectionCollapsible(self)
 
         self.addWidget(self.buttons.play_pause_widget)
@@ -75,19 +77,18 @@ class MainWindowPanelLeft(BasePanel):
         self.addWidget(self.thalamic_input_collapsible)
 
         self.addWidget(self.buttons.add_selector_box)
+        self.addWidget(self.cameras_collapsible)
         self.addWidget(self.rendered_objects_collapsible)
 
         self.addWidget(self.buttons.exit)
 
     def add_plotting_config_dependent_widgets(self, plotting_config: PlottingConfig):
         if plotting_config.windowed_neuron_interfaces is False:
-            self.neurons_collapsible = MainWindowNeuronsCollapsible(parent=self)
+            self.neurons_collapsible = MainWindowNeuronCollectionCollapsible(parent=self)
         if plotting_config.windowed_neuron_interfaces is False:
             self.insertWidget(2, self.neurons_collapsible)
 
-    def add_3d_object_sliders(self, obj):
-        collapsible = RenderedObjectCollapsible(obj, self.window, self)
-        self.rendered_objects_collapsible.add(collapsible)
-        return collapsible
+    # def add_3d_object_sliders(self, obj):
+    #     return self.rendered_objects_collapsible.add_object(obj)
 
 

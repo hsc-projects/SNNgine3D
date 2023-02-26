@@ -26,7 +26,8 @@ class Box(visuals.Box):
                  edge_color: Union[str, tuple] = 'white',
                  name: str = None,
                  depth_test=True, border_width=1, parent=None, interactive=False,
-                 use_parent_transform: bool = True):
+                 # use_parent_transform: bool = True
+                 ):
 
         if translate is None:
             translate = (shape[0] / 2, shape[1] / 2, shape[2] / 2)
@@ -57,10 +58,10 @@ class Box(visuals.Box):
             assert ((isv[3, ] - isv[0, ]) == (np.array([0, 0, isv[0, 2]]) * - 2)).all()
             self._initial_selection_vertices = isv
 
-        if use_parent_transform is False:
-            self.transform = STTransform()
-            self.transform.scale = scale
-            self.transform.translate = translate
+        # if use_parent_transform is False:
+        #     self.transform = STTransform()
+        #     self.transform.scale = scale
+        #     self.transform.translate = translate
 
 
 class CudaBox(Box, RenderedCudaObject):

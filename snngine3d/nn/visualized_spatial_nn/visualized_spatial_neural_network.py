@@ -8,7 +8,7 @@ from snngine3d.config_models import (
     PlottingConfig
 )
 from .sub_visuals import SelectorBox
-from snngine3d.vispy_torch_interop.utils import TorchCollection
+from snngine3d.nn.utils import Torch32BitCollection
 
 
 class PseudoNs:
@@ -16,7 +16,7 @@ class PseudoNs:
     G_props = None
 
 
-class VisualizedSpatialNeuralNetwork(TorchCollection):
+class VisualizedSpatialNeuralNetwork(Torch32BitCollection):
 
     def __init__(self, engine):
 

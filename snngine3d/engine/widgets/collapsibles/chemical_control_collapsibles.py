@@ -58,7 +58,7 @@ class ChemicalControlCollapsible(CollapsibleWidget):
         self.connected_chemical.visual.additive = self.button_frame.spinbox.value()
 
 
-class ChemicalControlCollapsibleContainer(CollapsibleWidget):
+class ChemicalControlsCollapsible(CollapsibleWidget):
 
     def __init__(self,  # chemical_collection: Union[DefaultChemicals, ChemicalConfigCollection],
                  title='Chemical Control', parent=None):

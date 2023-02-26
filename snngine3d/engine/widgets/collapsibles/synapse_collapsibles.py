@@ -74,7 +74,7 @@ class SynapseCollapsible(CollapsibleWidget):
         return self.visual_collection._dct[self.id_frame.spinbox.value()]
 
 
-class SynapseCollapsibleContainer(CollapsibleWidget):
+class SynapseCollectionCollapsible(CollapsibleWidget):
 
     def __init__(self, window: QMainWindow, title='Visualized Synapses', parent=None):
         CollapsibleWidget.__init__(self, title=title, parent=parent)

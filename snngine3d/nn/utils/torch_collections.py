@@ -5,21 +5,22 @@ import torch
 
 class TorchCollection:
 
-    def __init__(self, device, bprint_allocated_memory=False):
-        # torch.set_printoptions(precision=2)
+    def __init__(self, device, default_int_dtype, default_float_dtype, bprint_allocated_memory=False):
         self.device = torch.device(device)
         self.last_allocated_memory = 0
         self.bprint_allocated_memory = bprint_allocated_memory
         self.registered_buffers = []
+        self._default_int_dtype = default_int_dtype
+        self._default_float_dtype = default_float_dtype
 
     def izeros(self, shape) -> torch.Tensor:
-        return torch.zeros(shape, dtype=torch.int32, device=self.device)
+        return torch.zeros(shape, dtype=self._default_int_dtype, device=self.device)
 
     def fzeros(self, shape) -> torch.Tensor:
-        return torch.zeros(shape, dtype=torch.float32, device=self.device)
+        return torch.zeros(shape, dtype=self._default_float_dtype, device=self.device)
 
     def frand(self, shape) -> torch.Tensor:
-        return torch.rand(shape, dtype=torch.float32, device=self.device)
+        return torch.rand(shape, dtype=self._default_float_dtype, device=self.device)
 
     @staticmethod
     def to_dataframe(tensor: torch.Tensor):
@@ -44,3 +45,16 @@ class TorchCollection:
     def unregister_registered_buffers(self):
         for rb in self.registered_buffers:
             rb.unregister()
+
+
+class Torch32BitCollection(TorchCollection):
+
+    def __init__(self, device, bprint_allocated_memory=False):
+
+        super().__init__(device=device, default_int_dtype=torch.int32, default_float_dtype=torch.float32,
+                         bprint_allocated_memory=bprint_allocated_memory)
+
+
+
+
+

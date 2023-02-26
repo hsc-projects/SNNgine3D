@@ -5,6 +5,7 @@ from vispy.scene import visuals, Node
 
 from snngine3d.vispy_torch_interop.rendered_objects import RenderedCudaObject, RenderedCudaObjectNode
 from snngine3d.geometry.grid import GridDirectionsObject, initial_normal_vertices
+from snngine3d.geometry.vector import segment_intersection2d
 
 
 class CudaArrowVisual(visuals.Tube, RenderedCudaObject):
@@ -20,9 +21,9 @@ class CudaArrowVisual(visuals.Tube, RenderedCudaObject):
                               parent=parent)
         RenderedCudaObject.__init__(self)
 
-    def on_mouse_press(self, event):
-        self.print_mouse_event(event, 'Mouse press')
-        pos_scene = event.pos[:3]
+    # def on_mouse_press(self, event):
+    #     self.print_mouse_event(event, 'Mouse press')
+    #     pos_scene = event.pos[:3]
 
 
 # noinspection PyAbstractClass
@@ -69,6 +70,7 @@ class CudaGridArrow(RenderedCudaObjectNode):
             else:
                 color = np.array([0., 0., 1., self.default_alpha], dtype=np.float32)
         self._points = points
+        # self._canvas_length = None
         self._visual = CudaArrowVisual(points=points,
                                        name=name + '.obj',
                                        parent=None,
@@ -84,17 +86,52 @@ class CudaGridArrow(RenderedCudaObjectNode):
         self.last_scale = getattr(self.select_parent.scale, self._dim)
         self.last_translate = getattr(self.select_parent.translate, self._dim)
 
-    def on_drag_callback(self, v: np.ndarray, mode: int):
-        v = v[self._modifier_dim] * self._modifier_dir * self._mod_factor
-        # print(f'\ndragged arrow({round(v, 3)}):', self, '')
+    def on_drag_callback(self, old_pos: np.ndarray, new_pos: np.ndarray, mode: int):
+
+        p0 = self.get_transform('visual', 'canvas').map(self._points[0])
+        p1 = self.get_transform('visual', 'canvas').map(self._points[-1])
+
+        p0_canvas = p0[:2]/p0[3]
+        p1_canvas = p1[:2]/p1[3]
+
+        diff = new_pos - old_pos
+        p_drag = p1_canvas + diff
+
+        p_drag_hline = np.array([p_drag, p_drag + np.array([1, 0])])
+        p_drag_vline = np.array([p_drag, p_drag + np.array([0, 1])])
+
+        # new_hline_intersect = np.empty_like(p0)
+        p_drag_hline_intersect = segment_intersection2d(
+            seg0=np.array([p0_canvas, p1_canvas]),
+            seg1=p_drag_hline,
+        )
+        p_drag_vline_intersect = segment_intersection2d(
+            seg0=np.array([p0_canvas, p1_canvas]),
+            seg1=p_drag_vline,
+        )
+
+        # hline_dist = np.linalg.norm(p_drag_hline_intersect - p1_canvas)
+        # vline_dist = np.linalg.norm(p_drag_vline_intersect - p1_canvas)
+        #
+        # new_p1_canvas = p_drag_vline_intersect if vline_dist > hline_dist else p_drag_hline_intersect
+        #
+        # old_length = np.linalg.norm(p1_canvas - p0_canvas)
+        # new_length = np.linalg.norm(new_p1_canvas - p0_canvas)
+        #
+        # v = (new_length / old_length) * self._modifier_dir
+        #
+        # if np.isnan(v):
+        #     print()
+        #
+        # print(v)
 
         if mode == 0:
-            setattr(self.select_parent.scale, self._dim, self.last_scale + v)
+            setattr(self.select_parent.scale, self._dim, self.last_scale * v/2)
         elif mode == 1:
             setattr(self.select_parent.translate, self._dim,
-                    self.last_translate + self._translate_dir * v / 4)
+                    self.last_translate * v/4)
         else:
-            new_scale = self.last_scale + v/2
+            new_scale = self.last_scale * v/2
             setattr(self.select_parent.scale, self._dim, new_scale)
             edge_diff = self.select_parent.shape[self._dim_int] * (new_scale - self.last_scale)
             setattr(self.select_parent.translate, self._dim,

@@ -50,6 +50,9 @@ class MainWindow(BaseWindow):
         self.scene_3d = MainSceneCanvas(
             conf=CanvasConfig(keys=self.keys), app=self.app,
         )
+
+        self.left_panel.cameras_collapsible.add_camera(camera=self.scene_3d.network_view.camera, name='Camera0')
+
         self.group_info_scene: Optional[LocationGroupInfoCanvas] = None
         self.right_panel = LocationGroupInfoPanel(self, self.all_button_menu_actions)
 

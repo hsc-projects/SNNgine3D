@@ -1,10 +1,10 @@
 from copy import copy
-from typing import Optional
+# from typing import Optional
 import numpy as np
 
-from vispy import scene
 from vispy.visuals.transforms import STTransform
 from vispy.util import keys
+from vispy.scene import (Grid, TurntableCamera, ViewBox, XYZAxis)
 
 # from network import SpikingNeuralNetwork
 # from rendering import RenderedObject
@@ -20,6 +20,7 @@ from .widgets import (
 from .canvas_config import CanvasConfig
 
 from snngine3d.config_models import PlottingConfig
+from snngine3d.geometry.vector import segment_intersection2d
 from snngine3d.vispy_torch_interop import RenderedObject
 
 
@@ -49,12 +50,12 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
         self.group_firings_plot_single0 = None
         self.group_firings_plot_single1 = None
 
-        self.network_view = self.central_widget.add_view()
+        self.network_view: ViewBox = self.central_widget.add_view()
 
-        self.grid: scene.widgets.Grid = self.network_view.add_grid()
+        self.grid: Grid = self.network_view.add_grid()
 
-        self.network_view.camera = 'turntable'
-        axis = scene.visuals.XYZAxis(parent=self.network_view.scene)
+        self.network_view.camera = TurntableCamera(name='Camera0')
+        axis = XYZAxis(parent=self.network_view.scene)
         axis.transform = STTransform()
         axis.transform.move((-0.1, -0.1, -0.1))
 
@@ -78,7 +79,7 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
         self._last_selected_obj = None
 
         self._click_pos = np.zeros(2)
-        self._last_mouse_pos = np.zeros(2)
+        self._last_cursor_pos = np.zeros(2)
 
         self.mouse_pressed = True
 
@@ -166,16 +167,46 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
             self.network_view.camera.interactive = False
             self.network_view.interactive = False
             self._clicked_obj = self.visual_at(event.pos)
-            # print('\nCLICKED:', self._clicked_obj)
-            self.network_view.interactive = True
-            self._click_pos[:2] = self.mouse_pos(event)
 
+            self.network_view.interactive = True
+            self._click_pos[:2] = event.pos
+
+            import vispy
+            # pos = self.mouse_pos(event)
+            o: vispy.visuals.Visual = self.visual_at(event.pos)
+            v = self.network_view
+            c = v.camera
+            try:
+                verts = np.array([[-.25, -.25, -.25], [.25, -.25, -.25], [-.25, .25, -.25], [-.25, -.25, .25]])
+
+                dir0x_3d = verts[0] + (verts[1] - verts[0]) / 2
+                dir0y_3d = verts[0] + (verts[2] - verts[0]) / 2
+                dir0z_3d = verts[0] + (verts[3] - verts[0]) / 2
+
+                vert0_canvas = o.get_transform('visual', 'canvas').map(verts)
+                dir0x_3d_canvas = o.get_transform('visual', 'canvas').map(dir0x_3d)
+                dir0y_3d_canvas = o.get_transform('visual', 'canvas').map(dir0y_3d)
+                dir0z_3d_canvas = o.get_transform('visual', 'canvas').map(dir0z_3d)
+
+                vert0_canvas2d = vert0_canvas[:, :2]/vert0_canvas[:, 3][:, None]
+
+                dir0x_2d_0 = dir0x_3d_canvas[:2]/dir0x_3d_canvas[3]
+                dir0x_2d_1 = vert0_canvas2d[0] + (vert0_canvas2d[1] - vert0_canvas2d[0])/2
+
+                dir0y_2d_0 = dir0y_3d_canvas[:2]/dir0y_3d_canvas[3]
+                dir0y_2d_1 = vert0_canvas2d[0] + (vert0_canvas2d[2] - vert0_canvas2d[0])/2
+
+                dir0z_2d_0 = dir0z_3d_canvas[:2]/dir0z_3d_canvas[3]
+                dir0z_2d_1 = vert0_canvas2d[0] + (vert0_canvas2d[3] - vert0_canvas2d[0])/2
+            except:
+                pass
             if isinstance(self._clicked_obj, RenderedObject) and self._clicked_obj.draggable:
                 self._select_clicked_obj()
 
     def _mouse_moved(self, event):
-        self._last_mouse_pos[:2] = self.mouse_pos(event)
-        return (self._last_mouse_pos[:2] - self._click_pos[:2]).any()
+        # self._last_mouse_pos[:2] = self.mouse_pos(event)
+        self._last_cursor_pos[:2] = event.pos
+        return (self._last_cursor_pos[:2] - self._click_pos[:2]).any()
 
     def _select(self, obj: RenderedObject, v: bool):
         obj.select(v)
@@ -196,7 +227,6 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
             if isinstance(self._last_selected_obj, RenderedObject) and self._last_selected_obj.draggable:
                 self._select(self._last_selected_obj, False).update()
                 self._last_selected_obj = self._selected_objects[-1]
-            # self._last_selected_obj = None
 
             print(f'currently selected ({len(self._selected_objects)}):', self._selected_objects)
             # TODO: uncomment
@@ -209,16 +239,14 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
         self.network_view.camera.interactive = True
         if event.button == 1:
             if isinstance(self._clicked_obj, RenderedObject) and self._clicked_obj.draggable:
-                # print(keys.SHIFT in event.modifiers)
                 self.network_view.camera.interactive = False
-                self._last_mouse_pos[:2] = self.mouse_pos(event)
-                # dist = np.linalg.norm(self._last_mouse_pos - self._click_pos)
-                diff = self._last_mouse_pos - self._click_pos
-                # print('diff:', diff)
+                self._last_cursor_pos[:2] = event.pos
+
+                cursor_pos_diff = self._last_cursor_pos - self._click_pos
                 if keys.SHIFT in event.modifiers:
                     mode = 0
                 elif keys.CONTROL in event.modifiers:
                     mode = 1
                 else:
                     mode = 2
-                self._clicked_obj.on_drag_callback(diff/100, mode=mode)
+                self._clicked_obj.on_drag_callback(old_pos=self._click_pos, new_pos=self._last_cursor_pos, mode=mode)

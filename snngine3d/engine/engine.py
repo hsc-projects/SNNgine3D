@@ -54,11 +54,13 @@ class Engine(Application):
 
         self.main_window.scene_3d.set_current()
 
+        self._add_selector_box()
+
     def _add_selector_box(self):
         # self.main_window.scene_3d.set_current()
         s = self.network.add_selector_box(
             self.main_window.scene_3d, self.main_window.scene_3d.network_view)
-        self.main_window.left_panel.add_3d_object_sliders(s)
+        self.main_window.left_panel.rendered_objects_collapsible.add_object(s)
 
     def _add_synapsevisual(self):
         self.main_ui_panel.synapse_collapsible.add_interfaced_synapse(self.network, 0)

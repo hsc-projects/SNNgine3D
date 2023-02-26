@@ -191,7 +191,8 @@ class Engine(Application):
         # self.main_ui_panel.synapse_collapsible.add_interfaced_synapse(self.network, 1)
 
         if self.network.chemical_concentrations is not None:
-            self.main_ui_panel.chemical_collapsible.add_chemical_control_collapsibles(self.network.chemical_concentrations)
+            self.main_ui_panel.chemical_collapsible.add_chemical_control_collapsibles(
+                self.network.chemical_concentrations)
 
     def connect_chemical_controls(self):
         pass

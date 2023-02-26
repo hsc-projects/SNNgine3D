@@ -63,6 +63,8 @@ class SelectorBox(RenderedCudaObjectNode):
         self.unfreeze()
         self._scene = scene
         self.transform = STTransform()
+        # tr = STTransform()
+        # self.transform = self.transforms._visual_transform
         self.transform.translate = (self.shape[0] / 2, self.shape[1] / 2, self.shape[2] / 2)
         self.transform.scale = [1.1, 1.1, 1.1]
 

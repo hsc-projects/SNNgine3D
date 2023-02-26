@@ -1,14 +1,18 @@
 from .base_collapsible_widget import CollapsibleWidget, SubCollapsibleFrame
-from .chemical_control_collapsibles import ChemicalControlCollapsibleContainer
+
+from .camera_collapsible import CameraCollectionCollapsible, TurntableCameraCollapsible
+
+from .chemical_control_collapsibles import ChemicalControlsCollapsible
 from .neuron_collapsibles import (
-    MainWindowNeuronsCollapsible,
+    MainWindowNeuronCollectionCollapsible,
     NeuronIDFrame,
     SingleNeuronCollapsible,
 )
+
 from .rendered_object_collapsibles import (
     RenderedObjectCollapsible,
     RenderedObjectCollectionCollapsible
 )
 from .sensory_input_collapsible import SensoryInputCollapsible
-from .synapse_collapsibles import SynapticWeightsCollapsible, SynapseCollapsibleContainer
+from .synapse_collapsibles import SynapticWeightsCollapsible, SynapseCollectionCollapsible
 from .thalamic_input_collapsible import ThalamicInputCollapsible
