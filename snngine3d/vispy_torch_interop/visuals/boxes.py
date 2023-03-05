@@ -51,6 +51,8 @@ class Box(visuals.Box):
         self.interactive = interactive
 
         self.unfreeze()
+
+        self._initial_shape = shape
         if segments == (1, 1, 1):
             isv = np.unique(self._border._meshdata._vertices, axis=0)[[0, 4, 2, 1]]
             assert ((isv[1, ] - isv[0, ]) == (np.array([isv[0, 0], 0, 0]) * - 2)).all()
@@ -58,10 +60,9 @@ class Box(visuals.Box):
             assert ((isv[3, ] - isv[0, ]) == (np.array([0, 0, isv[0, 2]]) * - 2)).all()
             self._initial_selection_vertices = isv
 
-        # if use_parent_transform is False:
-        #     self.transform = STTransform()
-        #     self.transform.scale = scale
-        #     self.transform.translate = translate
+    @property
+    def initial_shape(self):
+        return self._initial_shape
 
 
 class CudaBox(Box, RenderedCudaObject):
@@ -91,6 +92,6 @@ class CudaBox(Box, RenderedCudaObject):
 
         if init_normals:
             assert segments == (1, 1, 1)
-            self.normals = InteractiveBoxNormals(select_parent, shape)
+            self.normals = InteractiveBoxNormals(select_parent, shape=self.initial_shape)
 
         RenderedCudaObject.__init__(self)

@@ -20,7 +20,7 @@ from .widgets import (
 from .canvas_config import CanvasConfig
 
 from snngine3d.config_models import PlottingConfig
-from snngine3d.geometry.vector import segment_intersection2d
+from snngine3d.geometry.vector import LineSegment
 from snngine3d.vispy_torch_interop import RenderedObject
 
 
@@ -80,6 +80,9 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
 
         self._click_pos = np.zeros(2)
         self._last_cursor_pos = np.zeros(2)
+        self._last_mouse_drag = LineSegment(
+            p_start=self._click_pos,
+            p_end=self._last_cursor_pos)
 
         self.mouse_pressed = True
 
@@ -249,4 +252,6 @@ class MainSceneCanvas(BaseEngineSceneCanvas):
                     mode = 1
                 else:
                     mode = 2
-                self._clicked_obj.on_drag_callback(old_pos=self._click_pos, new_pos=self._last_cursor_pos, mode=mode)
+                self._last_mouse_drag.set_p_start(self._click_pos)
+                self._last_mouse_drag.set_p_start(self._last_cursor_pos)
+                self._clicked_obj.on_drag_callback(drag=self._last_mouse_drag, mode=mode)

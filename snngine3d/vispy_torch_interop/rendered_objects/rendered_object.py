@@ -5,7 +5,7 @@ from vispy.visuals import CompoundVisual
 from vispy.scene import visuals
 from vispy.gloo.context import get_current_canvas
 
-
+from snngine3d.geometry.vector import LineSegment
 # from snngine3d.vispy_torch_interop.transformation.STR import Scale, Translate
 
 
@@ -152,7 +152,7 @@ class RenderedObject:
     def on_select_callback(self, v: bool):
         raise NotImplementedError
 
-    def on_drag_callback(self, old_pos: np.ndarray, new_pos: np.ndarray, mode: int):
+    def on_drag_callback(self, drag: LineSegment, mode: int):
         raise NotImplementedError
 
     def select(self, v):

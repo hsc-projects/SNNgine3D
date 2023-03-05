@@ -1,10 +1,20 @@
 import numpy as np
+from typing import Union
 
 
-def segment_intersection2d(seg0: np.ndarray, seg1: np.ndarray):
+from .line_segment import LineSegment
+
+
+def segment_intersection2d(seg0: Union[np.ndarray, LineSegment], seg1: Union[np.ndarray, LineSegment]):
     """
     Computer Graphics by F.S. Hill, Chapter 4, Section 6
     """
+
+    if isinstance(seg0, LineSegment):
+        seg0 = seg0.array
+    if isinstance(seg1, LineSegment):
+        seg1 = seg1.array
+
     if seg0.shape != (2, 2) or seg1.shape != (2, 2):
         raise ValueError
 

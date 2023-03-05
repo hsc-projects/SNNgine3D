@@ -4,8 +4,8 @@ import numpy as np
 from vispy.scene import visuals, Node
 
 from snngine3d.vispy_torch_interop.rendered_objects import RenderedCudaObject, RenderedCudaObjectNode
-from snngine3d.geometry.grid import GridDirectionsObject, initial_normal_vertices
-from snngine3d.geometry.vector import segment_intersection2d
+from snngine3d.geometry.grid import GridDirectionsObject, box_normal_origins
+from snngine3d.geometry.vector import LineSegment, segment_intersection2d
 
 
 class CudaArrowVisual(visuals.Tube, RenderedCudaObject):
@@ -20,10 +20,6 @@ class CudaArrowVisual(visuals.Tube, RenderedCudaObject):
                               color=color,
                               parent=parent)
         RenderedCudaObject.__init__(self)
-
-    # def on_mouse_press(self, event):
-    #     self.print_mouse_event(event, 'Mouse press')
-    #     pos_scene = event.pos[:3]
 
 
 # noinspection PyAbstractClass
@@ -40,13 +36,16 @@ class CudaGridArrow(RenderedCudaObjectNode):
 
         self.select_parent = select_parent
         self._translate_dir = 1
+
+        self.validate_initial_vertices(points)
+
         for i, d in enumerate(['x', 'y', 'z']):
-            if (points[:, i] != 0).any():
+            if bool((points[:, i] != 0).any()):
                 self._dim_int = i
                 self._dim: str = d
                 self._translate_dir = 1
                 self._modifier_dir = 1
-                if (points[:, i] < 0).any():
+                if bool((points[:, i] < 0).any()):
                     self._modifier_dir = -1
                     self._translate_dir = -1
 
@@ -56,20 +55,35 @@ class CudaGridArrow(RenderedCudaObjectNode):
             self._modifier_dir *= -1
             # self._translate_dir *= -1
 
-        self.default_alpha = .5
+        self._default_alpha = .5
 
         if name is None:
             name = (f"{self._select_parent.name}.{self.__class__.__name__}:{self._dim}"
                     f"{'+' if self._modifier_dir > 0 else '-'}")
 
         if color is None:
-            if points[:, 0].any():
-                color = np.array([1., 0., 0., self.default_alpha], dtype=np.float32)
-            elif points[:, 1].any():
-                color = np.array([0., 1., 0., self.default_alpha], dtype=np.float32)
+            if self._dim == 'x':
+                color = np.array([1., 0., 0., self._default_alpha], dtype=np.float32)
+            elif self._dim == 'y':
+                color = np.array([0., 1., 0., self._default_alpha], dtype=np.float32)
             else:
-                color = np.array([0., 0., 1., self.default_alpha], dtype=np.float32)
+                if self._dim != 'z':
+                    raise AttributeError
+                color = np.array([0., 0., 1., self._default_alpha], dtype=np.float32)
         self._points = points
+
+        self._initial_line_seg_repr = LineSegment(
+            p_start=np.array([0, 0, 0]),
+            p_end=np.array(self._points[0])
+        )
+        self._line_seg_repr_canvas: Optional[LineSegment] = None
+        self._line_seg_repr_canvas_tmp: Optional[LineSegment] = None
+        self._line_seg_repr_scene: Optional[LineSegment] = None
+        self._cross_line_h_end: np.ndarray = np.array([1, 0])
+        self._cross_line_h: LineSegment = LineSegment(p_start=np.array([0, 0]), p_end=self._cross_line_h_end)
+        self._cross_line_v_end: np.ndarray = np.array([0, 1])
+        self._cross_line_v: LineSegment = LineSegment(p_start=np.array([0, 0]), p_end=self._cross_line_v_end)
+
         # self._canvas_length = None
         self._visual = CudaArrowVisual(points=points,
                                        name=name + '.obj',
@@ -79,36 +93,66 @@ class CudaGridArrow(RenderedCudaObjectNode):
         super().__init__([self._visual], parent=parent, selectable=selectable, name=name, draggable=draggable)
         self.interactive = True
 
-    def on_select_callback(self, v):
-        # print(f'\nselected arrow({v}):', self, '\n')
-        self.gpu_array.tensor[:, 3] = 1. if v is True else self.default_alpha
+    @property
+    def line_seg_repr_scene(self) -> LineSegment:
+        new_points = self.get_transform('visual', 'scene').map(self._initial_line_seg_repr.array)
+        if self._line_seg_repr_scene is not None:
+            self._line_seg_repr_scene.set_points(new_points)
+        else:
+            self._line_seg_repr_scene = LineSegment.from_array(new_points)
+        return self._line_seg_repr_scene
 
-        self.last_scale = getattr(self.select_parent.scale, self._dim)
-        self.last_translate = getattr(self.select_parent.translate, self._dim)
+    @property
+    def line_seg_repr_canvas(self) -> LineSegment:
+        new_points_ = self.get_transform('visual', 'canvas').map(self._initial_line_seg_repr.array)
+        new_points = np.empty_like(new_points_[:, :2])
+        new_points[0][:] = new_points_[0][:2] / new_points_[0][3]
+        new_points[1][:] = new_points_[1][:2] / new_points_[1][3]
+        if self._line_seg_repr_canvas is not None:
+            self._line_seg_repr_canvas.set_points(new_points)
+        else:
+            self._line_seg_repr_canvas = LineSegment.from_array(new_points)
+        return self._line_seg_repr_canvas
 
-    def on_drag_callback(self, old_pos: np.ndarray, new_pos: np.ndarray, mode: int):
+    def actualize_ui(self):
+        getattr(self.select_parent.scale.spin_box_sliders, self._dim).actualize_values()
+        getattr(self.select_parent.translate.spin_box_sliders, self._dim).actualize_values()
 
-        p0 = self.get_transform('visual', 'canvas').map(self._points[0])
-        p1 = self.get_transform('visual', 'canvas').map(self._points[-1])
+    @property
+    def color_vbo_glir_id(self):
+        return self._visual.shared_program.vert['base_color'].id
 
-        p0_canvas = p0[:2]/p0[3]
-        p1_canvas = p1[:2]/p1[3]
+    def init_cuda_arrays(self):
+        self._gpu_array = self.face_color_array(buffer=self.color_vbo, mesh_data=self.visual.mesh_data)
 
-        diff = new_pos - old_pos
-        p_drag = p1_canvas + diff
+    def on_drag_callback(self, drag: LineSegment, mode: int):
 
-        p_drag_hline = np.array([p_drag, p_drag + np.array([1, 0])])
-        p_drag_vline = np.array([p_drag, p_drag + np.array([0, 1])])
+        canvas_line = self.line_seg_repr_canvas
 
-        # new_hline_intersect = np.empty_like(p0)
-        p_drag_hline_intersect = segment_intersection2d(
-            seg0=np.array([p0_canvas, p1_canvas]),
-            seg1=p_drag_hline,
-        )
-        p_drag_vline_intersect = segment_intersection2d(
-            seg0=np.array([p0_canvas, p1_canvas]),
-            seg1=p_drag_vline,
-        )
+        drag_dim = np.argmax(canvas_line.vec)
+        p_drag = canvas_line.p_end + drag.vec
+        if drag_dim == 0:
+            # self._cross_line_v.array = self._cross_line_v.array + canvas_line.p_end + drag
+            self._cross_line_v.set_p_start(p_drag)
+            self._cross_line_v.set_p_end(self._cross_line_v_end + p_drag)
+            cross_line = self._cross_line_v
+        else:
+            self._cross_line_h.set_p_start(p_drag)
+            self._cross_line_h.set_p_end(self._cross_line_h_end + p_drag)
+            cross_line = self._cross_line_h
+
+        p_cross = segment_intersection2d(canvas_line, cross_line)
+
+        canvas_line_dir = -1 if canvas_line.p_start[drag_dim] > canvas_line.p_end[drag_dim] else 1
+        drag_dir = -1 if drag.p_start[drag_dim] > drag.p_end[drag_dim] else 1
+
+        mod_dir = canvas_line_dir * drag_dir
+
+        self._line_seg_repr_canvas_tmp.set_p_start(canvas_line.p_start)
+        self._line_seg_repr_canvas_tmp.set_p_end(canvas_line.p_end)
+
+
+        mod_factor =
 
         # hline_dist = np.linalg.norm(p_drag_hline_intersect - p1_canvas)
         # vline_dist = np.linalg.norm(p_drag_vline_intersect - p1_canvas)
@@ -125,33 +169,45 @@ class CudaGridArrow(RenderedCudaObjectNode):
         #
         # print(v)
 
-        if mode == 0:
-            setattr(self.select_parent.scale, self._dim, self.last_scale * v/2)
-        elif mode == 1:
-            setattr(self.select_parent.translate, self._dim,
-                    self.last_translate * v/4)
-        else:
-            new_scale = self.last_scale * v/2
-            setattr(self.select_parent.scale, self._dim, new_scale)
-            edge_diff = self.select_parent.shape[self._dim_int] * (new_scale - self.last_scale)
-            setattr(self.select_parent.translate, self._dim,
-                    self.last_translate + self._translate_dir * (edge_diff / 2))
+        # if mode == 0:
+        #     setattr(self.select_parent.scale, self._dim, self.last_scale * v/2)
+        # elif mode == 1:
+        #     setattr(self.select_parent.translate, self._dim,
+        #             self.last_translate * v/4)
+        # else:
+        #     new_scale = self.last_scale * v/2
+        #     setattr(self.select_parent.scale, self._dim, new_scale)
+        #     edge_diff = self.select_parent.shape[self._dim_int] * (new_scale - self.last_scale)
+        #     setattr(self.select_parent.translate, self._dim,
+        #             self.last_translate + self._translate_dir * (edge_diff / 2))
         self.actualize_ui()
 
-    def actualize_ui(self):
-        getattr(self.select_parent.scale.spin_box_sliders, self._dim).actualize_values()
-        getattr(self.select_parent.translate.spin_box_sliders, self._dim).actualize_values()
+    def on_select_callback(self, v):
+        # print(f'\nselected arrow({v}):', self, '\n')
+        self.gpu_array.tensor[:, 3] = 1. if v is True else self._default_alpha
+
+        self.last_scale = getattr(self.select_parent.scale, self._dim)
+        self.last_translate = getattr(self.select_parent.translate, self._dim)
 
     @property
     def pos_vbo_glir_id(self):
         return self._visual._vertices.id
 
-    @property
-    def color_vbo_glir_id(self):
-        return self._visual.shared_program.vert['base_color'].id
+    @classmethod
+    def validate_initial_vertices(cls, vert: np.ndarray):
+        if vert.shape[1] != 3:
+            raise ValueError
 
-    def init_cuda_arrays(self):
-        self._gpu_array = self.face_color_array(buffer=self.color_vbo, mesh_data=self.visual.mesh_data)
+        for i in range(vert.shape[1]):
+            if bool((vert[:, i] != 0).any()):
+                if bool((vert[:, i-1] != 0).any()) or bool((vert[:, i-2] != 0).any()):
+                    raise AttributeError
+                break
+
+        distance_from_origin = np.linalg.norm(vert[0])
+        for i in range(vert.shape[0] - 1):
+            if np.linalg.norm(vert[i + 1]) < distance_from_origin:
+                raise ValueError(f"{np.linalg.norm(vert[i + 1])} < {distance_from_origin} (distance_from_origin)")
 
 
 class InteractiveBoxNormals(GridDirectionsObject):
@@ -159,7 +215,7 @@ class InteractiveBoxNormals(GridDirectionsObject):
     def __init__(self, select_parent, shape, mod_factors=None):
 
         normals = []
-        inv = initial_normal_vertices(shape)
+        inv = box_normal_origins(shape)
         for i in range(6):
             if mod_factors is None:
                 mod_factor = 1 / (3 * shape[int(i / 2)])

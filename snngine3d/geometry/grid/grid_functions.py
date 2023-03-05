@@ -46,14 +46,14 @@ class GridPositions:
         pass
 
 
-def initial_normal_vertices(shape):
-    # isv = self._initial_selection_vertices
-
+def box_normal_origins(box_shape):
+    if len(box_shape) != 3:
+        raise ValueError
     points = np.zeros((6, 4, 3), dtype=np.float32)
 
-    x0 = shape[0] / 2
-    y0 = shape[1] / 2
-    z0 = shape[2] / 2
+    x0 = box_shape[0] / 2
+    y0 = box_shape[1] / 2
+    z0 = box_shape[2] / 2
 
     points[0] = np.array([[x0, 0, 0], [x0 + x0 / 2, 0, 0], [x0 + x0 / 2, 0, 0], [x0 + 2 * x0 / 3, 0, 0]])
     points[1] = -1 * points[0]
