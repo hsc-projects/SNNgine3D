@@ -1,12 +1,13 @@
 from typing import Optional, Union
 
-import numpy as np
+# import numpy as np
 from vispy.visuals import CompoundVisual
 from vispy.scene import visuals
 from vispy.gloo.context import get_current_canvas
 
-from snngine3d.geometry.vector import LineSegment
 # from snngine3d.vispy_torch_interop.transformation.STR import Scale, Translate
+# from snngine3d.geometry.vector import LineSegment
+from snngine3d.geometry.vector import Segment2D
 
 
 def get_buffer_id(glir_id):
@@ -152,7 +153,7 @@ class RenderedObject:
     def on_select_callback(self, v: bool):
         raise NotImplementedError
 
-    def on_drag_callback(self, drag: LineSegment, mode: int):
+    def on_drag_callback(self, drag: Segment2D, mode: int):
         raise NotImplementedError
 
     def select(self, v):

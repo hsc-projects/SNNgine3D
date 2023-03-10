@@ -5,7 +5,8 @@ from vispy.scene import visuals, Node
 
 from snngine3d.vispy_torch_interop.rendered_objects import RenderedCudaObject, RenderedCudaObjectNode
 from snngine3d.geometry.grid import GridDirectionsObject, box_normal_origins
-from snngine3d.geometry.vector import LineSegment, segment_intersection2d
+from snngine3d.geometry.vector import Segment2D, Segment3D
+from copy import deepcopy
 
 
 class CudaArrowVisual(visuals.Tube, RenderedCudaObject):
@@ -25,9 +26,12 @@ class CudaArrowVisual(visuals.Tube, RenderedCudaObject):
 # noinspection PyAbstractClass
 class CudaGridArrow(RenderedCudaObjectNode):
 
-    def __init__(self, select_parent, points, color=None, name=None, tube_points=4,
+    def __init__(self, select_parent, points: np.ndarray, color=None, name=None, tube_points=4,
                  radius=np.array([.012, .012, .05, .0]), parent: Optional[Node] = None,
                  selectable=True, draggable=True, mod_factor=1):
+
+        if points.shape[1] != 3:
+            raise TypeError
 
         self.last_scale = None
         self.last_translate = None
@@ -72,17 +76,17 @@ class CudaGridArrow(RenderedCudaObjectNode):
                 color = np.array([0., 0., 1., self._default_alpha], dtype=np.float32)
         self._points = points
 
-        self._initial_line_seg_repr = LineSegment(
-            p_start=np.array([0, 0, 0]),
-            p_end=np.array(self._points[0])
+        self._initial_line_seg_repr: Segment2D = Segment2D.from_numpy(
+            arr0=np.array([0, 0, 0]),
+            arr1=self._points[0]
         )
-        self._line_seg_repr_canvas: Optional[LineSegment] = None
-        self._line_seg_repr_canvas_tmp: Optional[LineSegment] = None
-        self._line_seg_repr_scene: Optional[LineSegment] = None
-        self._cross_line_h_end: np.ndarray = np.array([1, 0])
-        self._cross_line_h: LineSegment = LineSegment(p_start=np.array([0, 0]), p_end=self._cross_line_h_end)
-        self._cross_line_v_end: np.ndarray = np.array([0, 1])
-        self._cross_line_v: LineSegment = LineSegment(p_start=np.array([0, 0]), p_end=self._cross_line_v_end)
+        self._line_seg_repr_canvas: Optional[Segment2D] = None
+        # self._line_seg_repr_canvas_tmp: Optional[LineSegment] = None
+        self._line_seg_repr_scene: Optional[Segment2D] = None
+        # self._cross_line_h_end: np.ndarray = np.array([1, 0])
+        # self._cross_line_h: LineSegment = LineSegment(p_start=np.array([0, 0]), p_end=self._cross_line_h_end)
+        # self._cross_line_v_end: np.ndarray = np.array([0, 1])
+        # self._cross_line_v: LineSegment = LineSegment(p_start=np.array([0, 0]), p_end=self._cross_line_v_end)
 
         # self._canvas_length = None
         self._visual = CudaArrowVisual(points=points,
@@ -94,12 +98,12 @@ class CudaGridArrow(RenderedCudaObjectNode):
         self.interactive = True
 
     @property
-    def line_seg_repr_scene(self) -> LineSegment:
+    def line_seg_repr_scene(self) -> Segment3D:
         new_points = self.get_transform('visual', 'scene').map(self._initial_line_seg_repr.array)
         if self._line_seg_repr_scene is not None:
             self._line_seg_repr_scene.set_points(new_points)
         else:
-            self._line_seg_repr_scene = LineSegment.from_array(new_points)
+            self._line_seg_repr_scene = Segment3D.from_numpy(new_points)
         return self._line_seg_repr_scene
 
     @property
@@ -125,44 +129,20 @@ class CudaGridArrow(RenderedCudaObjectNode):
     def init_cuda_arrays(self):
         self._gpu_array = self.face_color_array(buffer=self.color_vbo, mesh_data=self.visual.mesh_data)
 
-    def on_drag_callback(self, drag: LineSegment, mode: int):
+    def on_drag_callback(self, drag_line_seg: LineSegment, mode: int):
 
-        canvas_line = self.line_seg_repr_canvas
+        canvas_line_seg_drag_result = (deepcopy(self.line_seg_repr_canvas)
+                                       .drag_from_cursor(drag_line_seg=drag_line_seg))
 
-        drag_dim = np.argmax(canvas_line.vec)
-        p_drag = canvas_line.p_end + drag.vec
-        if drag_dim == 0:
-            # self._cross_line_v.array = self._cross_line_v.array + canvas_line.p_end + drag
-            self._cross_line_v.set_p_start(p_drag)
-            self._cross_line_v.set_p_end(self._cross_line_v_end + p_drag)
-            cross_line = self._cross_line_v
-        else:
-            self._cross_line_h.set_p_start(p_drag)
-            self._cross_line_h.set_p_end(self._cross_line_h_end + p_drag)
-            cross_line = self._cross_line_h
+        drag_factor = canvas_line_seg_drag_result.factor
 
-        p_cross = segment_intersection2d(canvas_line, cross_line)
+        if drag_factor == 1:
+            return
 
-        canvas_line_dir = -1 if canvas_line.p_start[drag_dim] > canvas_line.p_end[drag_dim] else 1
-        drag_dir = -1 if drag.p_start[drag_dim] > drag.p_end[drag_dim] else 1
-
-        mod_dir = canvas_line_dir * drag_dir
-
-        self._line_seg_repr_canvas_tmp.set_p_start(canvas_line.p_start)
-        self._line_seg_repr_canvas_tmp.set_p_end(canvas_line.p_end)
-
-
-        mod_factor =
-
-        # hline_dist = np.linalg.norm(p_drag_hline_intersect - p1_canvas)
-        # vline_dist = np.linalg.norm(p_drag_vline_intersect - p1_canvas)
-        #
-        # new_p1_canvas = p_drag_vline_intersect if vline_dist > hline_dist else p_drag_hline_intersect
-        #
-        # old_length = np.linalg.norm(p1_canvas - p0_canvas)
-        # new_length = np.linalg.norm(new_p1_canvas - p0_canvas)
-        #
-        # v = (new_length / old_length) * self._modifier_dir
+        prev_canvas_seg_0 = self.line_seg_repr_canvas
+        prev_canvas_seg_1 = canvas_line_seg_drag_result.invert_drag
+        line_scene = self._line_seg_repr_scene
+        # effect only in one direction w.r.t. the canvas (up/down or left/right]
         #
         # if np.isnan(v):
         #     print()

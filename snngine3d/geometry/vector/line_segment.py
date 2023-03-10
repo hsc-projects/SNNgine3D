@@ -1,20 +1,100 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 import numpy as np
+from typing import Optional, Union
+
+from .skgeom_extension import Point2D, Segment2D
 
 
 @dataclass(frozen=True)
-class LineSegment:
+class CursorDragResult2D:
+    seg: Segment2D
+    factor: Union[int, float]
+
+    @property
+    def initialized(self) -> bool:
+        return not ((self.seg is None)
+                    and (self.factor == 0))
+
+    @property
+    def invert_drag(self) -> Point2D:
+        return self.seg.source() + self.seg.to_vector() / self.factor
+
+    @classmethod
+    def from_drag(cls, segment: Segment2D,
+                  cursor_drag_seg: Segment2D) -> CursorDragResult2D:
+        src = segment.source()
+        trgt = segment.target()
+        vec = segment.to_vector()
+        drag_dim = np.argmax(vec)[0]
+        drag_diff = (cursor_drag_seg.target()[drag_dim]
+                     - cursor_drag_seg.source()[drag_dim])
+        if (drag_diff == 0) or (src[drag_dim] == trgt[drag_dim]):
+            return cls(seg=segment, factor=1)
+        drag_dim_length_self = trgt[drag_dim] - src[drag_dim]
+        factor = ((drag_dim_length_self + drag_diff) / drag_dim_length_self)
+
+        return cls(seg=src + vec * factor, factor=factor)
+
+
+@dataclass(frozen=True)
+class CustomLineSegment:
+
+    @dataclass
+    class DragResult:
+        seg: Optional[CustomLineSegment] = None
+        factor: int = 0
+
+        def __post_init__(self):
+            if self.valid is False:
+                raise AttributeError
+
+        @property
+        def initialized(self) -> bool:
+            return not ((self.seg is None)
+                        and (self.factor == 0))
+
+        @property
+        def invert_drag(self):
+            return self.seg.p_start + self.seg.vec / self.factor
+
+        @property
+        def valid(self) -> bool:
+            if self.initialized is False:
+                return True
+            return not ((self.seg is None)
+                        or (self.factor == 0))
 
     p_start: np.ndarray
     p_end: np.ndarray
 
+    _last_drag_result = DragResult()
+
     def __post_init__(self):
 
-        if self.p_start.shape != self.p_end.shape:
-            raise AttributeError
+        if self._last_drag_result.initialized is True:
+            raise AttributeError(
+                f"({self.__class__.__name__}) "
+                f"Internal DragResult was initialized")
+        self._last_drag_result.factor = 1
 
-        if (self.p_start.ndim != 1) or (self.p_end.ndim != 1):
-            raise AttributeError
+        if self.p_start.shape != self.p_end.shape:
+            raise AttributeError(
+                f"({self.__class__.__name__}) "
+                f"self.p_start.shape = {self.p_start.shape} "
+                f"!= {self.p_end.shape} = self.p_end.shape")
+
+        cond_ndim_start = self.p_start.ndim != 1
+        if cond_ndim_start or (self.p_end.ndim != 1):
+            if cond_ndim_start:
+                raise AttributeError(
+                    f"({self.__class__.__name__}) "
+                    f"self.p_start.ndim = {self.p_start.ndim} != 1")
+            else:
+                raise AttributeError(
+                    f"({self.__class__.__name__}) "
+                    f"self.p_end.ndim = {self.p_end.ndim} != 1")
 
     @property
     def array(self):
@@ -38,6 +118,10 @@ class LineSegment:
     def length(self):
         return np.linalg.norm(self.vec)
 
+    @property
+    def ndim(self):
+        return len(self.p_start)
+
     def set_p_start(self, arr):
         if arr.shape != self.p_start.shape:
             raise ValueError
@@ -58,3 +142,29 @@ class LineSegment:
     def vec(self):
         return self.p_end - self.p_start
 
+    def drag_from_cursor(self, drag_line_seg: CustomLineSegment,
+                         ) -> DragResult:
+        if self.ndim == 2:
+            vec = self.vec
+            drag_dim = np.argmax(vec)[0]
+
+            flat_drag_p_start = drag_line_seg.p_start[drag_dim]
+            flat_drag_p_end = drag_line_seg.p_end[drag_dim]
+
+            if ((self.p_start[drag_dim] == self.p_end[drag_dim])
+               or (flat_drag_p_start == flat_drag_p_end)):
+                self._last_drag_result.factor = 1
+                return self._last_drag_result
+
+            drag_dim_length_self = self.p_end[drag_dim] - self.p_start[drag_dim]
+            self._last_drag_result.factor = \
+                ((drag_dim_length_self + (flat_drag_p_end - flat_drag_p_start))
+                 / drag_dim_length_self)
+            self.set_p_end(self.p_start + vec * self._last_drag_result.factor)
+            return self._last_drag_result
+        else:
+            raise NotImplementedError
+
+
+if __name__ == '__main__':
+    pass

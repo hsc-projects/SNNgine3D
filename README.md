@@ -15,11 +15,12 @@ Licensed under the terms of the [Apache License 2.0](https://spdx.org/licenses/A
 
 ### Pre-requisites
 
+* [scikit-geometry](https://github.com/scikit-geometry/scikit-geometry)
 * [PyTorch](https://pytorch.org/)
 * [Nvidia CUDA](https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#) ~=11.6
 * "OpenGL-enabled"-[PyCUDA](https://wiki.tiker.net/PyCuda/Installation/Linux/) 
  
-For example:  
+#### Installing   "OpenGL-enabled"-[PyCUDA](https://wiki.tiker.net/PyCuda/Installation/Linux/)
 
     git clone https://github.com/inducer/pycuda.git
     cd pycuda
