@@ -2,17 +2,18 @@ import numpy as np
 from typing import Union
 
 
-from .line_segment import LineSegment
+from .skgeom_extension import Segment2D, Segment2DArray
 
 
-def segment_intersection2d(seg0: Union[np.ndarray, LineSegment], seg1: Union[np.ndarray, LineSegment]):
+def segment_intersection2d(seg0: Union[np.ndarray, Segment2D, Segment2DArray],
+                           seg1: Union[np.ndarray, Segment2D, Segment2DArray]):
     """
     Computer Graphics by F.S. Hill, Chapter 4, Section 6
     """
 
-    if isinstance(seg0, LineSegment):
+    if isinstance(seg0, (Segment2D, Segment2DArray)):
         seg0 = seg0.array
-    if isinstance(seg1, LineSegment):
+    if isinstance(seg1, (Segment2D, Segment2DArray)):
         seg1 = seg1.array
 
     if seg0.shape != (2, 2) or seg1.shape != (2, 2):

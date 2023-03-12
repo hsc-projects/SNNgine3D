@@ -7,7 +7,7 @@ from vispy.gloo.context import get_current_canvas
 
 # from snngine3d.vispy_torch_interop.transformation.STR import Scale, Translate
 # from snngine3d.geometry.vector import LineSegment
-from snngine3d.geometry.vector import Segment2D
+from snngine3d.geometry.vector import Segment2D, Segment2DArray
 
 
 def get_buffer_id(glir_id):
@@ -153,7 +153,7 @@ class RenderedObject:
     def on_select_callback(self, v: bool):
         raise NotImplementedError
 
-    def on_drag_callback(self, drag: Segment2D, mode: int):
+    def on_drag_callback(self, drag: Union[Segment2D, Segment2DArray], mode: int):
         raise NotImplementedError
 
     def select(self, v):

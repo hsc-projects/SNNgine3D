@@ -5,8 +5,7 @@ from vispy.scene import visuals, Node
 
 from snngine3d.vispy_torch_interop.rendered_objects import RenderedCudaObject, RenderedCudaObjectNode
 from snngine3d.geometry.grid import GridDirectionsObject, box_normal_origins
-from snngine3d.geometry.vector import Segment2D, Segment3D
-from copy import deepcopy
+from snngine3d.geometry.vector import CursorDragResult2D, Segment2DArray, Segment3DArray, Segment4DArrayCanvas
 
 
 class CudaArrowVisual(visuals.Tube, RenderedCudaObject):
@@ -76,17 +75,10 @@ class CudaGridArrow(RenderedCudaObjectNode):
                 color = np.array([0., 0., 1., self._default_alpha], dtype=np.float32)
         self._points = points
 
-        self._initial_line_seg_repr: Segment2D = Segment2D.from_numpy(
-            arr0=np.array([0, 0, 0]),
-            arr1=self._points[0]
-        )
-        self._line_seg_repr_canvas: Optional[Segment2D] = None
-        # self._line_seg_repr_canvas_tmp: Optional[LineSegment] = None
-        self._line_seg_repr_scene: Optional[Segment2D] = None
-        # self._cross_line_h_end: np.ndarray = np.array([1, 0])
-        # self._cross_line_h: LineSegment = LineSegment(p_start=np.array([0, 0]), p_end=self._cross_line_h_end)
-        # self._cross_line_v_end: np.ndarray = np.array([0, 1])
-        # self._cross_line_v: LineSegment = LineSegment(p_start=np.array([0, 0]), p_end=self._cross_line_v_end)
+        self._initial_seg = Segment3DArray(np.array([np.array([0, 0, 0]), self._points[0]]))
+        self._seg_canvas_4d = Segment4DArrayCanvas()
+        self._seg_scene = Segment3DArray()
+        self._drag_result = CursorDragResult2D()
 
         # self._canvas_length = None
         self._visual = CudaArrowVisual(points=points,
@@ -98,25 +90,13 @@ class CudaGridArrow(RenderedCudaObjectNode):
         self.interactive = True
 
     @property
-    def line_seg_repr_scene(self) -> Segment3D:
-        new_points = self.get_transform('visual', 'scene').map(self._initial_line_seg_repr.array)
-        if self._line_seg_repr_scene is not None:
-            self._line_seg_repr_scene.set_points(new_points)
-        else:
-            self._line_seg_repr_scene = Segment3D.from_numpy(new_points)
-        return self._line_seg_repr_scene
+    def seg_scene(self) -> Segment3DArray:
+        # return Segment3D.from_numpy(self.get_transform('visual', 'scene').map(self._initial_line_seg_repr_np))
+        return self._seg_scene.set_array(self.get_transform('visual', 'scene').map(self._initial_seg.array)[:, :3])
 
     @property
-    def line_seg_repr_canvas(self) -> LineSegment:
-        new_points_ = self.get_transform('visual', 'canvas').map(self._initial_line_seg_repr.array)
-        new_points = np.empty_like(new_points_[:, :2])
-        new_points[0][:] = new_points_[0][:2] / new_points_[0][3]
-        new_points[1][:] = new_points_[1][:2] / new_points_[1][3]
-        if self._line_seg_repr_canvas is not None:
-            self._line_seg_repr_canvas.set_points(new_points)
-        else:
-            self._line_seg_repr_canvas = LineSegment.from_array(new_points)
-        return self._line_seg_repr_canvas
+    def seg_canvas(self) -> Segment4DArrayCanvas:
+        return self._seg_canvas_4d.set_array(self.get_transform('visual', 'canvas').map(self._initial_seg.array))
 
     def actualize_ui(self):
         getattr(self.select_parent.scale.spin_box_sliders, self._dim).actualize_values()
@@ -129,19 +109,21 @@ class CudaGridArrow(RenderedCudaObjectNode):
     def init_cuda_arrays(self):
         self._gpu_array = self.face_color_array(buffer=self.color_vbo, mesh_data=self.visual.mesh_data)
 
-    def on_drag_callback(self, drag_line_seg: LineSegment, mode: int):
-
-        canvas_line_seg_drag_result = (deepcopy(self.line_seg_repr_canvas)
-                                       .drag_from_cursor(drag_line_seg=drag_line_seg))
-
-        drag_factor = canvas_line_seg_drag_result.factor
-
-        if drag_factor == 1:
+    def on_drag_callback(self, drag: Segment2DArray, mode: int):
+        factor = self._drag_result.update(dragged_seg=self.seg_canvas.segment2d, drag_seg=drag).factor
+        if factor == 1:
             return
 
-        prev_canvas_seg_0 = self.line_seg_repr_canvas
-        prev_canvas_seg_1 = canvas_line_seg_drag_result.invert_drag
-        line_scene = self._line_seg_repr_scene
+        prev_canvas_seg4d_0 = self.seg_canvas
+        prev_canvas_seg2d_0 = prev_canvas_seg4d_0.segment2d
+        line_scene = self.seg_scene
+        new_canvas_target = self._drag_result.target()
+
+        vector_4d = prev_canvas_seg4d_0.to_vector()
+
+        new_vec4 = Segment4DArrayCanvas.from_vector(
+            vector=vector_4d * factor, source=prev_canvas_seg4d_0.source())
+        prev_canvas_seg2d_1 = new_vec4.segment2d
         # effect only in one direction w.r.t. the canvas (up/down or left/right]
         #
         # if np.isnan(v):
